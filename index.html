@@ -2,34 +2,15 @@
 <html>
   <head>
     <base target="_top">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
       * {
         box-sizing: border-box;
       }
 
-      :root {
-        --cream: #FAF6F0;
-        --cream-dark: #F0E9DF;
-        --terracotta: #B85C38;
-        --terracotta-dark: #8B3A2F;
-        --forest: #4A6741;
-        --forest-light: #5C7A52;
-        --wheat: #D4A84B;
-        --wheat-light: #E8C777;
-        --brown-dark: #3D2914;
-        --brown: #5C4332;
-        --blue-muted: #7BA3B5;
-        --red-error: #C44536;
-      }
-
       body {
-        font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
-        background: var(--cream);
-        background-image:
-          radial-gradient(circle at 20% 80%, rgba(184, 92, 56, 0.05) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(74, 103, 65, 0.05) 0%, transparent 50%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
         margin: 0;
         padding: 20px;
@@ -40,136 +21,109 @@
 
       .container {
         background: white;
-        border-radius: 12px;
-        box-shadow:
-          0 4px 6px rgba(61, 41, 20, 0.07),
-          0 12px 28px rgba(61, 41, 20, 0.12);
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         width: 100%;
-        max-width: 580px;
+        max-width: 640px;
         overflow: hidden;
-        border: 1px solid rgba(212, 168, 75, 0.2);
       }
 
-      /* Folk Art Border Pattern */
       .header {
-        background: linear-gradient(135deg, var(--terracotta) 0%, var(--terracotta-dark) 100%);
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         color: white;
-        padding: 28px 36px;
+        padding: 32px 40px;
         text-align: center;
-        position: relative;
-      }
-
-      .header::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: repeating-linear-gradient(
-          90deg,
-          var(--wheat) 0px,
-          var(--wheat) 8px,
-          var(--terracotta-dark) 8px,
-          var(--terracotta-dark) 16px
-        );
       }
 
       .header h1 {
-        margin: 0 0 6px 0;
-        font-family: 'Merriweather', Georgia, serif;
-        font-size: 1.6rem;
+        margin: 0 0 8px 0;
+        font-size: 1.75rem;
         font-weight: 700;
-        letter-spacing: 0.5px;
+        letter-spacing: -0.5px;
       }
 
       .header p {
         margin: 0;
-        opacity: 0.9;
-        font-size: 0.9rem;
+        opacity: 0.8;
+        font-size: 0.95rem;
         font-weight: 400;
       }
 
       .content {
-        padding: 32px 36px;
+        padding: 40px;
       }
 
       /* Form Styles */
       .form-group {
-        margin-bottom: 20px;
+        margin-bottom: 24px;
       }
 
       label {
         display: block;
         font-size: 0.875rem;
         font-weight: 600;
-        color: var(--brown-dark);
+        color: #374151;
         margin-bottom: 8px;
-        font-family: 'Merriweather', Georgia, serif;
       }
 
       input[type="text"] {
         width: 100%;
-        padding: 12px 14px;
-        border: 2px solid var(--cream-dark);
-        border-radius: 8px;
+        padding: 14px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
         font-size: 1rem;
         font-family: inherit;
         transition: all 0.2s ease;
-        background: var(--cream);
       }
 
       input[type="text"]:focus {
         outline: none;
-        border-color: var(--terracotta);
-        background: white;
-        box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.1);
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
       }
 
       textarea {
         width: 100%;
-        padding: 12px 14px;
-        border: 2px solid var(--cream-dark);
-        border-radius: 8px;
+        padding: 14px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
         font-size: 0.95rem;
         font-family: inherit;
         line-height: 1.6;
         resize: vertical;
-        min-height: 180px;
+        min-height: 200px;
         transition: all 0.2s ease;
-        background: var(--cream);
       }
 
       textarea:focus {
         outline: none;
-        border-color: var(--terracotta);
-        background: white;
-        box-shadow: 0 0 0 3px rgba(184, 92, 56, 0.1);
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
       }
 
       .char-count {
         display: flex;
         justify-content: flex-end;
-        margin-top: 6px;
+        margin-top: 8px;
         font-size: 0.8rem;
-        color: var(--brown);
+        color: #6b7280;
       }
 
       .char-count.warning {
-        color: var(--wheat);
+        color: #f59e0b;
       }
 
       .char-count.error {
-        color: var(--red-error);
+        color: #ef4444;
         font-weight: 600;
       }
 
       /* Button Styles */
       .btn {
         width: 100%;
-        padding: 14px 24px;
+        padding: 16px 24px;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         font-size: 1rem;
         font-weight: 600;
         font-family: inherit;
@@ -178,18 +132,17 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 8px;
       }
 
       .btn-primary {
-        background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        box-shadow: 0 2px 8px rgba(74, 103, 65, 0.3);
       }
 
       .btn-primary:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(74, 103, 65, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -10px rgba(102, 126, 234, 0.5);
       }
 
       .btn-primary:disabled {
@@ -198,31 +151,20 @@
         transform: none;
       }
 
-      .btn-danger {
-        background: linear-gradient(135deg, var(--terracotta) 0%, var(--terracotta-dark) 100%);
+      .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: white;
-        box-shadow: 0 2px 8px rgba(184, 92, 56, 0.3);
       }
 
-      .btn-danger:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(184, 92, 56, 0.4);
-      }
-
-      .btn-secondary {
-        background: var(--cream);
-        color: var(--brown-dark);
-        border: 2px solid var(--cream-dark);
-      }
-
-      .btn-secondary:hover {
-        background: var(--cream-dark);
+      .btn-success:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.5);
       }
 
       /* Spinner */
       .spinner {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
         border: 2px solid rgba(255, 255, 255, 0.3);
         border-top-color: white;
         border-radius: 50%;
@@ -242,348 +184,217 @@
         display: block;
       }
 
-      /* ==================== */
-      /* CALL SCREEN STYLES   */
-      /* ==================== */
-
-      .call-container {
-        text-align: center;
-      }
-
-      .agent-avatar-wrapper {
-        position: relative;
-        width: 180px;
-        height: 180px;
-        margin: 0 auto 20px;
-      }
-
-      .agent-avatar {
-        width: 180px;
-        height: 180px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid var(--wheat);
-        box-shadow: 0 4px 20px rgba(212, 168, 75, 0.3);
-        transition: box-shadow 0.3s ease;
-      }
-
-      .agent-avatar.speaking {
-        box-shadow:
-          0 0 0 8px rgba(212, 168, 75, 0.2),
-          0 0 0 16px rgba(212, 168, 75, 0.1),
-          0 4px 20px rgba(212, 168, 75, 0.3);
-        animation: pulse-glow 1.5s ease-in-out infinite;
-      }
-
-      @keyframes pulse-glow {
-        0%, 100% {
-          box-shadow:
-            0 0 0 8px rgba(212, 168, 75, 0.2),
-            0 0 0 16px rgba(212, 168, 75, 0.1),
-            0 4px 20px rgba(212, 168, 75, 0.3);
-        }
-        50% {
-          box-shadow:
-            0 0 0 12px rgba(212, 168, 75, 0.15),
-            0 0 0 24px rgba(212, 168, 75, 0.05),
-            0 4px 20px rgba(212, 168, 75, 0.3);
-        }
-      }
-
-      .status-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 20px;
-        transition: all 0.3s ease;
-      }
-
-      .status-indicator.listening {
-        background: rgba(74, 103, 65, 0.1);
-        color: var(--forest);
-      }
-
-      .status-indicator.speaking {
-        background: rgba(212, 168, 75, 0.15);
-        color: var(--wheat);
-      }
-
-      .status-indicator.connecting {
-        background: rgba(123, 163, 181, 0.15);
-        color: var(--blue-muted);
-      }
-
-      .status-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: currentColor;
-        animation: pulse-dot 2s infinite;
-      }
-
-      @keyframes pulse-dot {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(0.85); }
-      }
-
-      /* Call Timer */
-      .call-timer {
-        font-family: 'Merriweather', Georgia, serif;
-        font-size: 1.1rem;
-        color: var(--brown);
-        margin-bottom: 16px;
-      }
-
-      /* Volume Indicator */
-      .volume-indicator {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        height: 24px;
-        margin-bottom: 20px;
-      }
-
-      .volume-bar {
-        width: 4px;
-        height: 8px;
-        background: var(--cream-dark);
-        border-radius: 2px;
-        transition: height 0.1s ease, background 0.1s ease;
-      }
-
-      .volume-bar.active {
-        background: var(--forest);
-      }
-
-      /* Call Controls */
-      .call-controls {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        margin-top: 24px;
-      }
-
-      .control-btn {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-      }
-
-      .control-btn svg {
-        width: 24px;
-        height: 24px;
-      }
-
-      .mute-btn {
-        background: var(--cream);
-        color: var(--brown);
-        border: 2px solid var(--cream-dark);
-      }
-
-      .mute-btn:hover {
-        background: var(--cream-dark);
-      }
-
-      .mute-btn.muted {
-        background: var(--terracotta);
-        color: white;
-        border-color: var(--terracotta);
-      }
-
-      .end-btn {
-        background: var(--terracotta);
-        color: white;
-        width: 64px;
-        height: 64px;
-      }
-
-      .end-btn:hover {
-        background: var(--terracotta-dark);
-        transform: scale(1.05);
-      }
-
-      .end-btn svg {
-        width: 28px;
-        height: 28px;
-      }
-
-      /* ==================== */
-      /* THANK YOU SCREEN     */
-      /* ==================== */
-
-      .complete-content {
-        text-align: center;
-        padding: 20px 0;
-      }
-
-      .complete-icon {
+      /* Success Screen */
+      .success-icon {
         width: 80px;
         height: 80px;
-        background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 20px;
+        margin: 0 auto 24px;
       }
 
-      .complete-icon svg {
+      .success-icon svg {
         width: 40px;
         height: 40px;
         color: white;
       }
 
-      .complete-content h2 {
-        font-family: 'Merriweather', Georgia, serif;
-        color: var(--brown-dark);
+      .success-content {
+        text-align: center;
+      }
+
+      .success-content h2 {
+        color: #1f2937;
         font-size: 1.5rem;
         margin: 0 0 12px 0;
         font-weight: 700;
       }
 
-      .complete-content p {
-        color: var(--brown);
+      .success-content p {
+        color: #6b7280;
         line-height: 1.6;
         margin: 0 0 8px 0;
       }
 
-      .student-name-display {
+      .student-name {
         display: inline-block;
-        background: var(--cream);
+        background: #f3f4f6;
         padding: 8px 16px;
-        border-radius: 6px;
+        border-radius: 8px;
         font-weight: 600;
-        color: var(--brown-dark);
-        margin: 12px 0 20px;
-        border: 1px solid var(--cream-dark);
+        color: #374151;
+        margin: 16px 0 24px;
       }
 
-      .info-box {
-        background: var(--cream);
-        border: 1px solid var(--cream-dark);
-        border-left: 4px solid var(--forest);
-        border-radius: 6px;
-        padding: 14px 18px;
-        margin-top: 20px;
-        text-align: left;
+      .divider {
+        height: 1px;
+        background: #e5e7eb;
+        margin: 32px 0;
       }
 
-      .info-box p {
-        color: var(--brown);
+      .instructions {
+        background: #fef3c7;
+        border: 1px solid #fcd34d;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+      }
+
+      .instructions h3 {
+        color: #92400e;
         font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .instructions p {
+        color: #78350f;
+        font-size: 0.875rem;
         margin: 0;
         line-height: 1.5;
       }
 
-      /* ==================== */
-      /* ERROR SCREEN         */
-      /* ==================== */
-
-      .error-content {
+      /* Defense Screen */
+      .defense-header {
         text-align: center;
-        padding: 20px 0;
+        margin-bottom: 24px;
       }
 
-      .error-icon {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, var(--terracotta) 0%, var(--terracotta-dark) 100%);
+      .defense-header h2 {
+        color: #1f2937;
+        font-size: 1.25rem;
+        margin: 0 0 8px 0;
+      }
+
+      .defense-header p {
+        color: #6b7280;
+        margin: 0;
+        font-size: 0.9rem;
+      }
+
+      .widget-container {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 24px;
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .widget-container.loading {
+        color: #6b7280;
+        font-size: 0.9rem;
+      }
+
+      /* Status Badge */
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-badge.ready {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .status-badge .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      /* Back link */
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #6b7280;
+        text-decoration: none;
+        font-size: 0.875rem;
+        margin-bottom: 16px;
+        transition: color 0.2s;
+      }
+
+      .back-link:hover {
+        color: #374151;
+      }
+
+      /* Defense Complete Screen */
+      .complete-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 20px;
+        margin: 0 auto 24px;
       }
 
-      .error-icon svg {
-        width: 40px;
-        height: 40px;
+      .complete-icon svg {
+        width: 50px;
+        height: 50px;
         color: white;
       }
 
-      .error-content h2 {
-        font-family: 'Merriweather', Georgia, serif;
-        color: var(--brown-dark);
-        font-size: 1.4rem;
-        margin: 0 0 12px 0;
+      .complete-content {
+        text-align: center;
       }
 
-      .error-content p {
-        color: var(--brown);
+      .complete-content h2 {
+        color: #1f2937;
+        font-size: 1.75rem;
+        margin: 0 0 16px 0;
+        font-weight: 700;
+      }
+
+      .complete-content p {
+        color: #6b7280;
         line-height: 1.6;
         margin: 0 0 8px 0;
       }
 
-      .error-message {
-        background: rgba(196, 69, 54, 0.08);
-        border: 1px solid rgba(196, 69, 54, 0.2);
-        border-radius: 6px;
-        padding: 12px 16px;
-        margin: 16px 0;
-        font-size: 0.9rem;
-        color: var(--red-error);
+      .complete-content .thank-you {
+        font-size: 1.1rem;
+        color: #374151;
+        margin-top: 24px;
       }
 
-      .error-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-top: 20px;
+      .info-box {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-top: 24px;
+        text-align: left;
       }
 
-      /* Decorative Elements */
-      .divider {
-        display: flex;
-        align-items: center;
-        margin: 24px 0;
-      }
-
-      .divider::before,
-      .divider::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--cream-dark), transparent);
-      }
-
-      .divider-ornament {
-        width: 8px;
-        height: 8px;
-        background: var(--wheat);
-        transform: rotate(45deg);
-        margin: 0 12px;
-      }
-
-      /* Responsive */
-      @media (max-width: 480px) {
-        .content {
-          padding: 24px 20px;
-        }
-
-        .header {
-          padding: 24px 20px;
-        }
-
-        .agent-avatar-wrapper {
-          width: 150px;
-          height: 150px;
-        }
-
-        .agent-avatar {
-          width: 150px;
-          height: 150px;
-        }
+      .info-box p {
+        color: #1e40af;
+        font-size: 0.875rem;
+        margin: 0;
+        line-height: 1.5;
       }
     </style>
   </head>
@@ -592,7 +403,7 @@
     <div class="container">
       <div class="header">
         <h1>Oral Defense Portal</h1>
-        <p>Chekhov Studies Examination</p>
+        <p>Submit your essay and begin your defense</p>
       </div>
 
       <div class="content">
@@ -626,117 +437,85 @@
             </div>
 
             <button type="submit" id="submitBtn" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-              <span id="submitText">Submit & Start Defense</span>
+              <span id="submitText">Submit Essay</span>
               <div id="submitSpinner" class="spinner" style="display: none;"></div>
             </button>
           </form>
         </div>
 
-        <!-- Screen 2: Call in Progress -->
-        <div id="screen-call" class="screen">
-          <div class="call-container">
-            <div class="agent-avatar-wrapper">
-              <img
-                id="agentAvatar"
-                class="agent-avatar"
-                src="https://drive.google.com/uc?export=view&id=15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
-                alt="ChekhovBot"
-              >
-            </div>
-
-            <div id="statusIndicator" class="status-indicator connecting">
-              <span class="status-dot"></span>
-              <span id="statusText">Connecting...</span>
-            </div>
-
-            <div id="callTimer" class="call-timer">0:00</div>
-
-            <div id="volumeIndicator" class="volume-indicator">
-              <div class="volume-bar"></div>
-              <div class="volume-bar"></div>
-              <div class="volume-bar"></div>
-              <div class="volume-bar"></div>
-              <div class="volume-bar"></div>
-              <div class="volume-bar"></div>
-              <div class="volume-bar"></div>
-              <div class="volume-bar"></div>
-            </div>
-
-            <div class="call-controls">
-              <button id="muteBtn" class="control-btn mute-btn" onclick="toggleMute()" title="Mute/Unmute">
-                <svg id="micOnIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-                <svg id="micOffIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display: none;">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                </svg>
-              </button>
-
-              <button id="endBtn" class="control-btn end-btn" onclick="endDefense()" title="End Defense">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2v-3.28a1 1 0 00-.684-.948l-4.493-1.498a1 1 0 00-1.21.502l-1.13 2.257a11.042 11.042 0 01-5.516-5.517l2.257-1.128a1 1 0 00.502-1.21L9.228 3.683A1 1 0 008.279 3H5z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Screen 3: Defense Complete -->
-        <div id="screen-complete" class="screen">
-          <div class="complete-content">
-            <div class="complete-icon">
+        <!-- Screen 2: Submission Success -->
+        <div id="screen-success" class="screen">
+          <div class="success-content">
+            <div class="success-icon">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
+            <h2>Essay Submitted Successfully</h2>
+            <p>Your essay has been received and you're ready for your oral defense.</p>
+            <div class="student-name" id="displayName">Student Name</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="instructions">
+            <h3>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Before You Begin
+            </h3>
+            <p>When the defense starts, the AI examiner will ask you to paste your essay into the chat. Please have it ready to copy. You'll then answer questions about your work verbally.</p>
+          </div>
+
+          <button onclick="startDefense()" class="btn btn-success">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+            Start Oral Defense
+          </button>
+        </div>
+
+        <!-- Screen 3: Defense in Progress -->
+        <div id="screen-defense" class="screen">
+          <div class="defense-header">
+            <span class="status-badge ready">
+              <span class="dot"></span>
+              Defense Active
+            </span>
+            <h2>Your Defense is in Progress</h2>
+            <p>Speak clearly and answer the examiner's questions about your essay.</p>
+          </div>
+
+          <div id="widgetContainer" class="widget-container loading">
+            Loading voice agent...
+          </div>
+        </div>
+
+        <!-- Screen 4: Defense Complete -->
+        <div id="screen-complete" class="screen">
+          <div class="complete-content">
+            <div class="complete-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
             <h2>Defense Complete</h2>
             <p>Your oral defense has been recorded and submitted for review.</p>
-            <div class="student-name-display" id="completeDisplayName">Student Name</div>
-            <p>Thank you for completing your defense!</p>
+            <div class="student-name" id="completeDisplayName">Student Name</div>
+            <p class="thank-you">Thank you for completing your defense!</p>
 
             <div class="info-box">
               <p>Your instructor will review your essay and defense transcript. Grades will be posted according to your course schedule. You may now close this window.</p>
             </div>
           </div>
         </div>
-
-        <!-- Screen 4: Error -->
-        <div id="screen-error" class="screen">
-          <div class="error-content">
-            <div class="error-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h2>Something Went Wrong</h2>
-            <p>We encountered an issue with your defense session.</p>
-            <div id="errorMessage" class="error-message">
-              Unable to connect to the voice agent.
-            </div>
-            <p>Please try again. If the problem persists, contact your instructor.</p>
-
-            <div class="error-actions">
-              <button onclick="retryDefense()" class="btn btn-primary">
-                Try Again
-              </button>
-              <button onclick="backToSubmit()" class="btn btn-secondary">
-                Back to Start
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- 11Labs Client SDK -->
-    <script type="module">
-      // Import 11Labs SDK
-      import { Conversation } from 'https://unpkg.com/@11labs/client@latest/dist/index.js';
+   <script src="https://unpkg.com/@elevenlabs/convai-widget-embed@beta" async type="text/javascript"></script>
 
+    <script>
       // Configuration
       const MAX_CHARS = 15000;
       const AGENT_ID = "agent_7501kesm7cg3e53rznc4dnjckgt4";
@@ -744,21 +523,7 @@
       // State
       let currentSessionId = null;
       let studentName = null;
-      let conversation = null;
-      let isMuted = false;
-      let callStartTime = null;
-      let timerInterval = null;
-      let audioContext = null;
-      let analyser = null;
-      let micStream = null;
-
-      // Expose functions to window for onclick handlers
-      window.handleSubmit = handleSubmit;
-      window.toggleMute = toggleMute;
-      window.endDefense = endDefense;
-      window.retryDefense = retryDefense;
-      window.backToSubmit = backToSubmit;
-      window.updateCharCount = updateCharCount;
+      let defenseActive = false;
 
       // Character count
       function updateCharCount() {
@@ -796,7 +561,7 @@
         const submitSpinner = document.getElementById('submitSpinner');
 
         submitBtn.disabled = true;
-        submitText.textContent = 'Starting...';
+        submitText.textContent = 'Submitting...';
         submitSpinner.style.display = 'block';
 
         // Submit to backend
@@ -811,16 +576,19 @@
           currentSessionId = response.sessionId;
           studentName = document.getElementById('name').value;
 
-          // Start the defense immediately
-          startDefense();
+          // Update display
+          document.getElementById('displayName').textContent = studentName;
+
+          // Switch to success screen
+          showScreen('screen-success');
         } else {
-          showError("Submission failed: " + response.message);
+          alert("Error: " + response.message);
           resetSubmitButton();
         }
       }
 
       function onSubmitError(error) {
-        showError("Server error: " + error.message);
+        alert("Server error: " + error.message);
         resetSubmitButton();
       }
 
@@ -830,232 +598,80 @@
         const submitSpinner = document.getElementById('submitSpinner');
 
         submitBtn.disabled = false;
-        submitText.textContent = 'Submit & Start Defense';
+        submitText.textContent = 'Submit Essay';
         submitSpinner.style.display = 'none';
       }
 
       // Start defense
-      async function startDefense() {
-        showScreen('screen-call');
-        updateStatus('connecting', 'Connecting...');
+      function startDefense() {
+        defenseActive = true;
+        showScreen('screen-defense');
+        initializeWidget();
+      }
 
-        try {
-          // Request microphone permission
-          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      function backToSuccess(event) {
+        event.preventDefault();
+        defenseActive = false;
+        showScreen('screen-success');
 
-          // Set up volume indicator
-          setupVolumeIndicator(micStream);
+        // Remove widget if it exists
+        const container = document.getElementById('widgetContainer');
+        container.innerHTML = '<span>Loading voice agent...</span>';
+        container.classList.add('loading');
+      }
 
-          // Start conversation with 11Labs
-          conversation = await Conversation.startSession({
-            agentId: AGENT_ID,
-            dynamicVariables: {
-              session_id: currentSessionId,
-              student_name: studentName
-            },
-            onConnect: () => {
-              console.log('Connected to 11Labs');
-              updateStatus('listening', 'Listening...');
-              startTimer();
-            },
-            onDisconnect: () => {
-              console.log('Disconnected from 11Labs');
-              showDefenseComplete();
-            },
-            onError: (error) => {
-              console.error('11Labs error:', error);
-              showError('Connection lost: ' + (error.message || 'Please try again.'));
-            },
-            onModeChange: ({ mode }) => {
-              if (mode === 'speaking') {
-                updateStatus('speaking', 'Agent Speaking...');
-                document.getElementById('agentAvatar').classList.add('speaking');
-              } else {
-                updateStatus('listening', 'Listening...');
-                document.getElementById('agentAvatar').classList.remove('speaking');
-              }
-            }
-          });
+      // Initialize 11Labs widget with session_id
+      function initializeWidget() {
+        const container = document.getElementById('widgetContainer');
+        container.innerHTML = '';
+        container.classList.remove('loading');
 
-        } catch (error) {
-          console.error('Failed to start defense:', error);
+        // Create the widget element
+        const widget = document.createElement('elevenlabs-convai');
+        widget.setAttribute('agent-id', AGENT_ID);
 
-          if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-            showError('Microphone access denied. Please allow microphone access and try again.');
-          } else if (error.name === 'NotFoundError') {
-            showError('No microphone found. Please connect a microphone and try again.');
-          } else {
-            showError('Failed to connect: ' + (error.message || 'Please check your connection and try again.'));
-          }
+        // Pass session_id as dynamic variable for webhook correlation
+        widget.setAttribute('dynamic-variables', JSON.stringify({
+          session_id: currentSessionId,
+          student_name: studentName
+        }));
+
+        // Listen for call end events from the widget
+        widget.addEventListener('elevenlabs-convai:call', handleCallEvent);
+        widget.addEventListener('elevenlabs-convai:conversation', handleCallEvent);
+
+        container.appendChild(widget);
+      }
+
+      // Handle call/conversation events from the widget
+      function handleCallEvent(event) {
+        console.log('Widget event:', event.type, event.detail);
+
+        // Check for call ended status
+        const detail = event.detail || {};
+        if (detail.status === 'ended' ||
+            detail.status === 'disconnected' ||
+            event.type.includes('ended') ||
+            event.type.includes('disconnected')) {
+          showDefenseComplete();
         }
       }
 
-      // Volume indicator setup
-      function setupVolumeIndicator(stream) {
-        try {
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          analyser = audioContext.createAnalyser();
-          const source = audioContext.createMediaStreamSource(stream);
-          source.connect(analyser);
-          analyser.fftSize = 256;
-
-          updateVolumeIndicator();
-        } catch (e) {
-          console.log('Volume indicator not available:', e);
-        }
-      }
-
-      function updateVolumeIndicator() {
-        if (!analyser) return;
-
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(dataArray);
-
-        // Calculate average volume
-        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-        const normalizedVolume = Math.min(average / 128, 1);
-
-        // Update volume bars
-        const bars = document.querySelectorAll('.volume-bar');
-        const activeBars = Math.round(normalizedVolume * bars.length);
-
-        bars.forEach((bar, index) => {
-          if (index < activeBars && !isMuted) {
-            bar.classList.add('active');
-            bar.style.height = `${8 + (normalizedVolume * 16)}px`;
-          } else {
-            bar.classList.remove('active');
-            bar.style.height = '8px';
-          }
-        });
-
-        requestAnimationFrame(updateVolumeIndicator);
-      }
-
-      // Timer
-      function startTimer() {
-        callStartTime = Date.now();
-        timerInterval = setInterval(updateTimer, 1000);
-      }
-
-      function updateTimer() {
-        if (!callStartTime) return;
-
-        const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
-        const minutes = Math.floor(elapsed / 60);
-        const seconds = elapsed % 60;
-
-        document.getElementById('callTimer').textContent =
-          `${minutes}:${seconds.toString().padStart(2, '0')}`;
-      }
-
-      function stopTimer() {
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          timerInterval = null;
-        }
-      }
-
-      // Mute toggle
-      function toggleMute() {
-        isMuted = !isMuted;
-
-        const muteBtn = document.getElementById('muteBtn');
-        const micOnIcon = document.getElementById('micOnIcon');
-        const micOffIcon = document.getElementById('micOffIcon');
-
-        if (isMuted) {
-          muteBtn.classList.add('muted');
-          micOnIcon.style.display = 'none';
-          micOffIcon.style.display = 'block';
-
-          // Mute the conversation
-          if (conversation && conversation.setVolume) {
-            conversation.setVolume({ input: 0 });
-          }
-          if (micStream) {
-            micStream.getAudioTracks().forEach(track => track.enabled = false);
-          }
-        } else {
-          muteBtn.classList.remove('muted');
-          micOnIcon.style.display = 'block';
-          micOffIcon.style.display = 'none';
-
-          // Unmute
-          if (conversation && conversation.setVolume) {
-            conversation.setVolume({ input: 1 });
-          }
-          if (micStream) {
-            micStream.getAudioTracks().forEach(track => track.enabled = true);
-          }
-        }
-      }
-
-      // End defense
-      async function endDefense() {
-        if (conversation) {
-          try {
-            await conversation.endSession();
-          } catch (e) {
-            console.log('Error ending session:', e);
-          }
-        }
-        showDefenseComplete();
-      }
-
-      // Show defense complete
+      // Show the defense complete screen
       function showDefenseComplete() {
-        stopTimer();
-        cleanupAudio();
+        // Only show if defense was active
+        if (!defenseActive) return;
+        defenseActive = false;
 
+        // Update the student name on the complete screen
         document.getElementById('completeDisplayName').textContent = studentName;
+
+        // Clear the widget container
+        const container = document.getElementById('widgetContainer');
+        container.innerHTML = '';
+
+        // Show the completion screen
         showScreen('screen-complete');
-      }
-
-      // Error handling
-      function showError(message) {
-        stopTimer();
-        cleanupAudio();
-        resetSubmitButton();
-
-        document.getElementById('errorMessage').textContent = message;
-        showScreen('screen-error');
-      }
-
-      function retryDefense() {
-        if (currentSessionId && studentName) {
-          startDefense();
-        } else {
-          backToSubmit();
-        }
-      }
-
-      function backToSubmit() {
-        resetSubmitButton();
-        showScreen('screen-submit');
-      }
-
-      // Cleanup
-      function cleanupAudio() {
-        if (micStream) {
-          micStream.getTracks().forEach(track => track.stop());
-          micStream = null;
-        }
-        if (audioContext) {
-          audioContext.close();
-          audioContext = null;
-          analyser = null;
-        }
-        conversation = null;
-      }
-
-      // Status updates
-      function updateStatus(status, text) {
-        const indicator = document.getElementById('statusIndicator');
-        const statusText = document.getElementById('statusText');
-
-        indicator.className = 'status-indicator ' + status;
-        statusText.textContent = text;
       }
 
       // Screen management
@@ -1069,6 +685,15 @@
       // Initialize
       document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('maxChars').textContent = MAX_CHARS.toLocaleString();
+
+        // Also listen for widget events at the document level (backup)
+        document.addEventListener('elevenlabs-convai:call', handleCallEvent);
+        document.addEventListener('elevenlabs-convai:conversation', handleCallEvent);
+
+        // Listen for the specific call-ended event pattern
+        document.addEventListener('elevenlabs-convai:call-ended', function() {
+          showDefenseComplete();
+        });
       });
     </script>
 
