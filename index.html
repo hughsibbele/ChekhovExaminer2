@@ -688,6 +688,16 @@
         font-size: 1.1rem;
       }
 
+      .widget-wrapper {
+        display: none;
+        justify-content: center;
+        margin: 16px 0;
+      }
+
+      .widget-wrapper.active {
+        display: flex;
+      }
+
       /* ==================== */
       /* COMPLETE SCREEN      */
       /* ==================== */
@@ -985,8 +995,8 @@
                 <span id="timerDisplay">00:00</span>
               </div>
 
-              <!-- Hidden widget container -->
-              <div id="widgetContainer" style="display: none;"></div>
+              <!-- Widget container - visible when call is active -->
+              <div id="widgetContainer" class="widget-wrapper"></div>
 
               <!-- Call Controls -->
               <div id="callControls" class="call-controls-container">
@@ -1210,14 +1220,13 @@
       function beginCall() {
         if (callInProgress) return;
 
-        // Update UI to show connecting
-        updateStatus('connecting', 'Connecting...');
-        document.getElementById('defenseTitle').textContent = 'Connecting...';
-        document.getElementById('defenseSubtitle').textContent = 'Please wait while we connect you';
-        document.getElementById('startCallBtn').disabled = true;
-        document.getElementById('startCallBtn').innerHTML = '<div class="spinner"></div> Connecting...';
+        // Update UI
+        document.getElementById('preCallControls').style.display = 'none';
+        updateStatus('connecting', 'Click the widget button to start');
+        document.getElementById('defenseTitle').textContent = 'Start Your Defense';
+        document.getElementById('defenseSubtitle').textContent = 'Click the call button below to connect with ChekhovBot';
 
-        // Initialize the widget
+        // Initialize and show the widget
         initializeWidget();
       }
 
@@ -1225,6 +1234,7 @@
       function initializeWidget() {
         const container = document.getElementById('widgetContainer');
         container.innerHTML = '';
+        container.classList.add('active');
 
         // Create the widget element
         widgetElement = document.createElement('elevenlabs-convai');
@@ -1245,14 +1255,6 @@
         widgetElement.addEventListener('elevenlabs-convai:conversation', handleCallEvent);
 
         container.appendChild(widgetElement);
-
-        // Show call started after brief delay
-        setTimeout(() => {
-          if (defenseActive) {
-            callInProgress = true;
-            showCallInProgress();
-          }
-        }, 2000);
       }
 
       // Show the call in progress UI
@@ -1260,12 +1262,17 @@
         document.getElementById('preCallControls').style.display = 'none';
         document.getElementById('duringCallControls').style.display = 'block';
         document.getElementById('postCallControls').style.display = 'none';
+        document.getElementById('widgetContainer').classList.add('active');
 
         document.getElementById('defenseTitle').textContent = 'Defense in Progress';
         document.getElementById('defenseSubtitle').textContent = 'Speak clearly and answer the questions';
 
         updateStatus('active', 'Connected - Listening');
-        startCallTimer();
+
+        // Only start timer if not already running
+        if (!timerInterval) {
+          startCallTimer();
+        }
       }
 
       // Toggle mute
@@ -1305,6 +1312,7 @@
         document.getElementById('preCallControls').style.display = 'none';
         document.getElementById('duringCallControls').style.display = 'none';
         document.getElementById('postCallControls').style.display = 'block';
+        document.getElementById('widgetContainer').classList.remove('active');
 
         document.getElementById('defenseTitle').textContent = 'Defense Complete';
         document.getElementById('defenseSubtitle').textContent = 'Your responses have been recorded';
@@ -1319,6 +1327,16 @@
 
         const detail = event.detail || {};
 
+        // Detect call started
+        if (detail.status === 'connected' ||
+            event.type.includes('started') ||
+            event.type.includes('connected')) {
+          if (!callInProgress) {
+            callInProgress = true;
+            showCallInProgress();
+          }
+        }
+
         // Update avatar speaking state
         if (detail.isSpeaking !== undefined) {
           const avatar = document.getElementById('agentAvatar');
@@ -1331,12 +1349,21 @@
           }
         }
 
+        // Also check mode for speaking/listening
+        if (detail.mode === 'speaking') {
+          document.getElementById('agentAvatar').classList.add('speaking');
+          updateStatus('speaking', 'ChekhovBot Speaking');
+        } else if (detail.mode === 'listening') {
+          document.getElementById('agentAvatar').classList.remove('speaking');
+          updateStatus('active', 'Listening...');
+        }
+
         // Check for call ended status
         if (detail.status === 'ended' ||
             detail.status === 'disconnected' ||
             event.type.includes('ended') ||
             event.type.includes('disconnected')) {
-          if (callInProgress) {
+          if (callInProgress || defenseActive) {
             callInProgress = false;
             stopCallTimer();
             showCallEnded();
@@ -1420,6 +1447,8 @@
         document.getElementById('defenseSubtitle').textContent = 'Click the button below to connect with ChekhovBot';
         document.getElementById('statusText').textContent = 'Ready to begin';
         document.getElementById('callTimer').style.display = 'none';
+        document.getElementById('widgetContainer').classList.remove('active');
+        document.getElementById('widgetContainer').innerHTML = '';
 
         showScreen('screen-welcome');
       }
