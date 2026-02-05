@@ -2,15 +2,39 @@
 <html>
   <head>
     <base target="_top">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
     <style>
       * {
         box-sizing: border-box;
       }
 
+      :root {
+        --cream: #FAF6F0;
+        --cream-dark: #F0E9DF;
+        --burgundy: #722F37;
+        --burgundy-dark: #5C252C;
+        --burgundy-light: #8B3A44;
+        --terracotta: #B85C38;
+        --terracotta-dark: #8B3A2F;
+        --forest: #4A6741;
+        --forest-light: #5C7A52;
+        --wheat: #D4A84B;
+        --wheat-light: #E8C777;
+        --gold: #C9A227;
+        --gold-light: #E5C55A;
+        --brown-dark: #3D2914;
+        --brown: #5C4332;
+        --blue-muted: #7BA3B5;
+        --red-error: #C44536;
+      }
+
       body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--cream);
+        background-image:
+          radial-gradient(circle at 20% 80%, rgba(114, 47, 55, 0.05) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(201, 162, 39, 0.05) 0%, transparent 50%);
         min-height: 100vh;
         margin: 0;
         padding: 20px;
@@ -21,158 +45,62 @@
 
       .container {
         background: white;
-        border-radius: 16px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border-radius: 12px;
+        box-shadow:
+          0 4px 6px rgba(61, 41, 20, 0.07),
+          0 12px 28px rgba(61, 41, 20, 0.12);
         width: 100%;
-        max-width: 640px;
+        max-width: 600px;
         overflow: hidden;
+        border: 1px solid rgba(212, 168, 75, 0.3);
       }
 
+      /* Folk Art Border Pattern */
       .header {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        background: linear-gradient(135deg, var(--burgundy) 0%, var(--burgundy-dark) 100%);
         color: white;
-        padding: 32px 40px;
+        padding: 28px 36px;
         text-align: center;
+        position: relative;
+      }
+
+      .header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: repeating-linear-gradient(
+          90deg,
+          var(--gold) 0px,
+          var(--gold) 12px,
+          var(--burgundy-dark) 12px,
+          var(--burgundy-dark) 24px,
+          var(--wheat) 24px,
+          var(--wheat) 36px,
+          var(--burgundy-dark) 36px,
+          var(--burgundy-dark) 48px
+        );
       }
 
       .header h1 {
-        margin: 0 0 8px 0;
-        font-size: 1.75rem;
+        margin: 0 0 6px 0;
+        font-family: 'Merriweather', Georgia, serif;
+        font-size: 1.5rem;
         font-weight: 700;
-        letter-spacing: -0.5px;
+        letter-spacing: 0.5px;
       }
 
       .header p {
         margin: 0;
-        opacity: 0.8;
-        font-size: 0.95rem;
+        opacity: 0.9;
+        font-size: 0.9rem;
         font-weight: 400;
       }
 
       .content {
-        padding: 40px;
-      }
-
-      /* Form Styles */
-      .form-group {
-        margin-bottom: 24px;
-      }
-
-      label {
-        display: block;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 8px;
-      }
-
-      input[type="text"] {
-        width: 100%;
-        padding: 14px 16px;
-        border: 2px solid #e5e7eb;
-        border-radius: 10px;
-        font-size: 1rem;
-        font-family: inherit;
-        transition: all 0.2s ease;
-      }
-
-      input[type="text"]:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-      }
-
-      textarea {
-        width: 100%;
-        padding: 14px 16px;
-        border: 2px solid #e5e7eb;
-        border-radius: 10px;
-        font-size: 0.95rem;
-        font-family: inherit;
-        line-height: 1.6;
-        resize: vertical;
-        min-height: 200px;
-        transition: all 0.2s ease;
-      }
-
-      textarea:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-      }
-
-      .char-count {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 8px;
-        font-size: 0.8rem;
-        color: #6b7280;
-      }
-
-      .char-count.warning {
-        color: #f59e0b;
-      }
-
-      .char-count.error {
-        color: #ef4444;
-        font-weight: 600;
-      }
-
-      /* Button Styles */
-      .btn {
-        width: 100%;
-        padding: 16px 24px;
-        border: none;
-        border-radius: 10px;
-        font-size: 1rem;
-        font-weight: 600;
-        font-family: inherit;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-      }
-
-      .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-      }
-
-      .btn-primary:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px -10px rgba(102, 126, 234, 0.5);
-      }
-
-      .btn-primary:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-      }
-
-      .btn-success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-      }
-
-      .btn-success:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.5);
-      }
-
-      /* Spinner */
-      .spinner {
-        width: 20px;
-        height: 20px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: white;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-      }
-
-      @keyframes spin {
-        to { transform: rotate(360deg); }
+        padding: 32px 36px;
       }
 
       /* Screen States */
@@ -184,217 +112,617 @@
         display: block;
       }
 
-      /* Success Screen */
-      .success-icon {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      /* ==================== */
+      /* WELCOME SCREEN       */
+      /* ==================== */
+
+      .welcome-content {
+        text-align: center;
+        padding: 20px 0;
+      }
+
+      .avatar-large {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid var(--gold);
+        box-shadow:
+          0 0 0 3px var(--burgundy),
+          0 8px 32px rgba(114, 47, 55, 0.25);
+        margin-bottom: 24px;
+      }
+
+      .welcome-title {
+        font-family: 'Merriweather', Georgia, serif;
+        font-size: 1.75rem;
+        color: var(--burgundy);
+        margin: 0 0 16px 0;
+        font-weight: 700;
+      }
+
+      .welcome-intro {
+        color: var(--brown);
+        line-height: 1.7;
+        font-size: 1rem;
+        margin: 0 0 24px 0;
+        font-style: italic;
+      }
+
+      .ornamental-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin: 24px 0;
+        color: var(--gold);
+      }
+
+      .ornament-line {
+        height: 2px;
+        width: 60px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      }
+
+      .ornament-diamond {
+        width: 8px;
+        height: 8px;
+        background: var(--gold);
+        transform: rotate(45deg);
+      }
+
+      /* ==================== */
+      /* FORM STYLES          */
+      /* ==================== */
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--brown-dark);
+        margin-bottom: 8px;
+        font-family: 'Merriweather', Georgia, serif;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 12px 14px;
+        border: 2px solid var(--cream-dark);
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        background: var(--cream);
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--burgundy);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(114, 47, 55, 0.1);
+      }
+
+      textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 2px solid var(--cream-dark);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        line-height: 1.6;
+        resize: vertical;
+        min-height: 180px;
+        transition: all 0.2s ease;
+        background: var(--cream);
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: var(--burgundy);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(114, 47, 55, 0.1);
+      }
+
+      .char-count {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 6px;
+        font-size: 0.8rem;
+        color: var(--brown);
+      }
+
+      .char-count.warning {
+        color: var(--wheat);
+      }
+
+      .char-count.error {
+        color: var(--red-error);
+        font-weight: 600;
+      }
+
+      /* ==================== */
+      /* BUTTON STYLES        */
+      /* ==================== */
+
+      .btn {
+        width: 100%;
+        padding: 14px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--burgundy) 0%, var(--burgundy-dark) 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(114, 47, 55, 0.3);
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(114, 47, 55, 0.4);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(74, 103, 65, 0.3);
+      }
+
+      .btn-success:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(74, 103, 65, 0.4);
+      }
+
+      .btn-secondary {
+        background: var(--cream);
+        color: var(--brown-dark);
+        border: 2px solid var(--cream-dark);
+      }
+
+      .btn-secondary:hover {
+        background: var(--cream-dark);
+      }
+
+      /* Spinner */
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* ==================== */
+      /* READY SCREEN         */
+      /* ==================== */
+
+      .ready-content {
+        text-align: center;
+      }
+
+      .avatar-medium {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--gold);
+        box-shadow: 0 4px 16px rgba(114, 47, 55, 0.2);
+        margin-bottom: 20px;
+      }
+
+      .summary-card {
+        background: var(--cream);
+        border: 2px solid var(--cream-dark);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 24px;
+        text-align: left;
+      }
+
+      .summary-card h3 {
+        font-family: 'Merriweather', Georgia, serif;
+        font-size: 1rem;
+        color: var(--burgundy);
+        margin: 0 0 12px 0;
+      }
+
+      .summary-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+      }
+
+      .summary-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .summary-label {
+        color: var(--brown);
+        min-width: 80px;
+        font-weight: 600;
+      }
+
+      .summary-value {
+        color: var(--brown-dark);
+        flex: 1;
+      }
+
+      .essay-preview {
+        background: white;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        color: var(--brown);
+        font-style: italic;
+        max-height: 60px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .essay-preview::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        background: linear-gradient(transparent, white);
+      }
+
+      .speech-bubble {
+        background: var(--cream);
+        border: 2px solid var(--gold);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        position: relative;
+        font-style: italic;
+        color: var(--brown);
+        line-height: 1.6;
+      }
+
+      .speech-bubble::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 10px solid var(--gold);
+      }
+
+      .speech-bubble::after {
+        content: '';
+        position: absolute;
+        top: -7px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 8px solid var(--cream);
+      }
+
+      .checklist {
+        background: var(--cream);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+        text-align: left;
+      }
+
+      .checklist-title {
+        font-family: 'Merriweather', Georgia, serif;
+        font-size: 0.9rem;
+        color: var(--brown-dark);
+        margin: 0 0 12px 0;
+        font-weight: 600;
+      }
+
+      .checklist-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        color: var(--brown);
+      }
+
+      .checklist-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .check-icon {
+        width: 20px;
+        height: 20px;
+        background: var(--forest);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 24px;
+        flex-shrink: 0;
       }
 
-      .success-icon svg {
+      .check-icon svg {
+        width: 12px;
+        height: 12px;
+        color: white;
+      }
+
+      /* ==================== */
+      /* DEFENSE SCREEN       */
+      /* ==================== */
+
+      .defense-content {
+        text-align: center;
+      }
+
+      .agent-avatar-wrapper {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 0 auto 20px;
+      }
+
+      .agent-avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--gold);
+        box-shadow: 0 4px 20px rgba(201, 162, 39, 0.3);
+        transition: box-shadow 0.3s ease;
+      }
+
+      .agent-avatar.speaking {
+        box-shadow:
+          0 0 0 8px rgba(201, 162, 39, 0.2),
+          0 0 0 16px rgba(201, 162, 39, 0.1),
+          0 4px 20px rgba(201, 162, 39, 0.3);
+        animation: pulse-glow 1.5s ease-in-out infinite;
+      }
+
+      @keyframes pulse-glow {
+        0%, 100% {
+          box-shadow:
+            0 0 0 8px rgba(201, 162, 39, 0.2),
+            0 0 0 16px rgba(201, 162, 39, 0.1),
+            0 4px 20px rgba(201, 162, 39, 0.3);
+        }
+        50% {
+          box-shadow:
+            0 0 0 12px rgba(201, 162, 39, 0.15),
+            0 0 0 24px rgba(201, 162, 39, 0.05),
+            0 4px 20px rgba(201, 162, 39, 0.3);
+        }
+      }
+
+      .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+      }
+
+      .status-indicator.connecting {
+        background: rgba(123, 163, 181, 0.15);
+        color: var(--blue-muted);
+      }
+
+      .status-indicator.active {
+        background: rgba(74, 103, 65, 0.12);
+        color: var(--forest);
+      }
+
+      .status-indicator.speaking {
+        background: rgba(201, 162, 39, 0.15);
+        color: var(--gold);
+      }
+
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse-dot 2s infinite;
+      }
+
+      @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.85); }
+      }
+
+      .defense-header h2 {
+        font-family: 'Merriweather', Georgia, serif;
+        font-size: 1.25rem;
+        color: var(--brown-dark);
+        margin: 0 0 8px 0;
+      }
+
+      .defense-header p {
+        color: var(--brown);
+        margin: 0 0 20px 0;
+        font-size: 0.9rem;
+      }
+
+      .call-timer {
+        font-family: 'Merriweather', Georgia, serif;
+        font-size: 1.1rem;
+        color: var(--brown);
+        margin-bottom: 16px;
+      }
+
+      .widget-container {
+        background: var(--cream);
+        border-radius: 12px;
+        padding: 20px;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--cream-dark);
+      }
+
+      .widget-container.loading {
+        color: var(--brown);
+        font-size: 0.9rem;
+      }
+
+      /* Folk border frame around defense area */
+      .defense-frame {
+        border: 3px solid var(--gold);
+        border-radius: 16px;
+        padding: 24px;
+        background: linear-gradient(white, white) padding-box,
+                    repeating-linear-gradient(
+                      45deg,
+                      var(--gold) 0,
+                      var(--gold) 5px,
+                      var(--wheat-light) 5px,
+                      var(--wheat-light) 10px
+                    ) border-box;
+      }
+
+      /* ==================== */
+      /* COMPLETE SCREEN      */
+      /* ==================== */
+
+      .complete-content {
+        text-align: center;
+        padding: 20px 0;
+      }
+
+      .complete-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 4px 16px rgba(74, 103, 65, 0.3);
+      }
+
+      .complete-icon svg {
         width: 40px;
         height: 40px;
         color: white;
       }
 
-      .success-content {
-        text-align: center;
-      }
-
-      .success-content h2 {
-        color: #1f2937;
+      .complete-content h2 {
+        font-family: 'Merriweather', Georgia, serif;
+        color: var(--brown-dark);
         font-size: 1.5rem;
         margin: 0 0 12px 0;
         font-weight: 700;
       }
 
-      .success-content p {
-        color: #6b7280;
+      .complete-content p {
+        color: var(--brown);
         line-height: 1.6;
         margin: 0 0 8px 0;
       }
 
-      .student-name {
+      .student-name-display {
         display: inline-block;
-        background: #f3f4f6;
+        background: var(--cream);
         padding: 8px 16px;
-        border-radius: 8px;
+        border-radius: 6px;
         font-weight: 600;
-        color: #374151;
-        margin: 16px 0 24px;
+        color: var(--brown-dark);
+        margin: 12px 0 20px;
+        border: 1px solid var(--cream-dark);
       }
 
-      .divider {
-        height: 1px;
-        background: #e5e7eb;
-        margin: 32px 0;
-      }
-
-      .instructions {
-        background: #fef3c7;
-        border: 1px solid #fcd34d;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-bottom: 24px;
-      }
-
-      .instructions h3 {
-        color: #92400e;
-        font-size: 0.9rem;
-        font-weight: 600;
-        margin: 0 0 8px 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .instructions p {
-        color: #78350f;
-        font-size: 0.875rem;
-        margin: 0;
-        line-height: 1.5;
-      }
-
-      /* Defense Screen */
-      .defense-header {
-        text-align: center;
-        margin-bottom: 24px;
-      }
-
-      .defense-header h2 {
-        color: #1f2937;
-        font-size: 1.25rem;
-        margin: 0 0 8px 0;
-      }
-
-      .defense-header p {
-        color: #6b7280;
-        margin: 0;
-        font-size: 0.9rem;
-      }
-
-      .widget-container {
-        background: #f9fafb;
+      .celebratory-border {
+        border: 3px double var(--gold);
         border-radius: 12px;
         padding: 24px;
-        min-height: 120px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .widget-container.loading {
-        color: #6b7280;
-        font-size: 0.9rem;
-      }
-
-      /* Status Badge */
-      .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-
-      .status-badge.ready {
-        background: #d1fae5;
-        color: #065f46;
-      }
-
-      .status-badge .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: currentColor;
-        animation: pulse 2s infinite;
-      }
-
-      @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-      }
-
-      /* Back link */
-      .back-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: #6b7280;
-        text-decoration: none;
-        font-size: 0.875rem;
-        margin-bottom: 16px;
-        transition: color 0.2s;
-      }
-
-      .back-link:hover {
-        color: #374151;
-      }
-
-      /* Defense Complete Screen */
-      .complete-icon {
-        width: 100px;
-        height: 100px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 24px;
-      }
-
-      .complete-icon svg {
-        width: 50px;
-        height: 50px;
-        color: white;
-      }
-
-      .complete-content {
-        text-align: center;
-      }
-
-      .complete-content h2 {
-        color: #1f2937;
-        font-size: 1.75rem;
-        margin: 0 0 16px 0;
-        font-weight: 700;
-      }
-
-      .complete-content p {
-        color: #6b7280;
-        line-height: 1.6;
-        margin: 0 0 8px 0;
-      }
-
-      .complete-content .thank-you {
-        font-size: 1.1rem;
-        color: #374151;
-        margin-top: 24px;
+        background: linear-gradient(135deg, rgba(201, 162, 39, 0.03) 0%, rgba(74, 103, 65, 0.03) 100%);
       }
 
       .info-box {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-top: 24px;
+        background: var(--cream);
+        border: 1px solid var(--cream-dark);
+        border-left: 4px solid var(--forest);
+        border-radius: 6px;
+        padding: 14px 18px;
+        margin-top: 20px;
         text-align: left;
       }
 
       .info-box p {
-        color: #1e40af;
-        font-size: 0.875rem;
+        color: var(--brown);
+        font-size: 0.9rem;
         margin: 0;
         line-height: 1.5;
+      }
+
+      /* ==================== */
+      /* RESPONSIVE           */
+      /* ==================== */
+
+      @media (max-width: 480px) {
+        body {
+          padding: 10px;
+        }
+
+        .content {
+          padding: 24px 20px;
+        }
+
+        .header {
+          padding: 20px 24px;
+        }
+
+        .header h1 {
+          font-size: 1.25rem;
+        }
+
+        .avatar-large {
+          width: 120px;
+          height: 120px;
+        }
+
+        .welcome-title {
+          font-size: 1.4rem;
+        }
+
+        .defense-frame {
+          padding: 16px;
+        }
       }
     </style>
   </head>
@@ -402,16 +730,58 @@
 
     <div class="container">
       <div class="header">
-        <h1>Oral Defense Portal</h1>
-        <p>Submit your essay and begin your defense</p>
+        <h1>Chekhov Defense Portal</h1>
+        <p>Oral Examination of Literary Works</p>
       </div>
 
       <div class="content">
-        <!-- Screen 1: Submission Form -->
-        <div id="screen-submit" class="screen active">
+        <!-- Screen 1: WELCOME -->
+        <div id="screen-welcome" class="screen active">
+          <div class="welcome-content">
+            <img
+              src="https://drive.google.com/uc?export=view&id=15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
+              alt="ChekhovBot"
+              class="avatar-large"
+            >
+            <h2 class="welcome-title">Welcome, Dear Scholar</h2>
+            <p class="welcome-intro">
+              I am ChekhovBot, humble servant to the literary arts and guardian of scholarly discourse.
+              I have been entrusted with the solemn duty of conducting your oral defense.
+              Please, enter and present your work.
+            </p>
+
+            <div class="ornamental-divider">
+              <span class="ornament-line"></span>
+              <span class="ornament-diamond"></span>
+              <span class="ornament-line"></span>
+            </div>
+
+            <button onclick="showScreen('screen-submit')" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+              Enter the Portal
+            </button>
+          </div>
+        </div>
+
+        <!-- Screen 2: ESSAY SUBMISSION -->
+        <div id="screen-submit" class="screen">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+            <img
+              src="https://drive.google.com/uc?export=view&id=15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
+              alt="ChekhovBot"
+              style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold);"
+            >
+            <div>
+              <h2 style="font-family: 'Merriweather', Georgia, serif; font-size: 1.1rem; color: var(--burgundy); margin: 0;">Submit Your Essay</h2>
+              <p style="font-size: 0.85rem; color: var(--brown); margin: 4px 0 0 0;">Provide your name and essay text below</p>
+            </div>
+          </div>
+
           <form id="essayForm" onsubmit="handleSubmit(event)">
             <div class="form-group">
-              <label for="name">Full Name</label>
+              <label for="name">Your Full Name</label>
               <input
                 type="text"
                 id="name"
@@ -423,7 +793,7 @@
             </div>
 
             <div class="form-group">
-              <label for="essay">Your Essay</label>
+              <label for="essay">Essay Text</label>
               <textarea
                 id="essay"
                 name="essay"
@@ -441,79 +811,157 @@
               <div id="submitSpinner" class="spinner" style="display: none;"></div>
             </button>
           </form>
+
+          <div style="text-align: center; margin-top: 16px;">
+            <a href="#" onclick="showScreen('screen-welcome'); return false;" style="color: var(--brown); font-size: 0.85rem; text-decoration: none;">
+              &larr; Back to welcome
+            </a>
+          </div>
         </div>
 
-        <!-- Screen 2: Submission Success -->
-        <div id="screen-success" class="screen">
-          <div class="success-content">
-            <div class="success-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
+        <!-- Screen 3: READY FOR DEFENSE -->
+        <div id="screen-ready" class="screen">
+          <div class="ready-content">
+            <img
+              src="https://drive.google.com/uc?export=view&id=15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
+              alt="ChekhovBot"
+              class="avatar-medium"
+            >
+
+            <div class="summary-card">
+              <h3>Submission Received</h3>
+              <div class="summary-item">
+                <span class="summary-label">Student:</span>
+                <span class="summary-value" id="summaryName">-</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Essay:</span>
+                <div class="summary-value">
+                  <div class="essay-preview" id="summaryEssay">-</div>
+                </div>
+              </div>
             </div>
-            <h2>Essay Submitted Successfully</h2>
-            <p>Your essay has been received and you're ready for your oral defense.</p>
-            <div class="student-name" id="displayName">Student Name</div>
-          </div>
 
-          <div class="divider"></div>
+            <div class="speech-bubble">
+              "Excellent! I have received your essay and have prepared my questions.
+              The examination awaits. When you are ready to proceed, we shall begin."
+            </div>
 
-          <div class="instructions">
-            <h3>
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div class="checklist">
+              <h4 class="checklist-title">Before you begin:</h4>
+              <div class="checklist-item">
+                <span class="check-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span>Find a quiet space with minimal background noise</span>
+              </div>
+              <div class="checklist-item">
+                <span class="check-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span>Ensure your microphone is working properly</span>
+              </div>
+              <div class="checklist-item">
+                <span class="check-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span>Be prepared to discuss your essay in detail</span>
+              </div>
+            </div>
+
+            <button onclick="startDefense()" class="btn btn-success">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
-              Before You Begin
-            </h3>
-            <p>When the defense starts, the AI examiner will ask you to paste your essay into the chat. Please have it ready to copy. You'll then answer questions about your work verbally.</p>
+              Begin Oral Defense
+            </button>
           </div>
-
-          <button onclick="startDefense()" class="btn btn-success">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
-            Start Oral Defense
-          </button>
         </div>
 
-        <!-- Screen 3: Defense in Progress -->
+        <!-- Screen 4: DEFENSE IN PROGRESS -->
         <div id="screen-defense" class="screen">
-          <div class="defense-header">
-            <span class="status-badge ready">
-              <span class="dot"></span>
-              Defense Active
-            </span>
-            <h2>Your Defense is in Progress</h2>
-            <p>Speak clearly and answer the examiner's questions about your essay.</p>
-          </div>
+          <div class="defense-content">
+            <div class="defense-frame">
+              <div class="agent-avatar-wrapper">
+                <img
+                  src="https://drive.google.com/uc?export=view&id=15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
+                  alt="ChekhovBot"
+                  class="agent-avatar"
+                  id="agentAvatar"
+                >
+              </div>
 
-          <div id="widgetContainer" class="widget-container loading">
-            Loading voice agent...
+              <div id="statusIndicator" class="status-indicator connecting">
+                <span class="status-dot"></span>
+                <span id="statusText">Connecting...</span>
+              </div>
+
+              <div class="defense-header">
+                <h2>Defense in Progress</h2>
+                <p>Speak clearly and answer the examiner's questions.</p>
+              </div>
+
+              <div id="callTimer" class="call-timer" style="display: none;">
+                <span id="timerDisplay">00:00</span>
+              </div>
+
+              <div id="widgetContainer" class="widget-container loading">
+                Preparing examination...
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Screen 4: Defense Complete -->
+        <!-- Screen 5: COMPLETE -->
         <div id="screen-complete" class="screen">
           <div class="complete-content">
-            <div class="complete-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h2>Defense Complete</h2>
-            <p>Your oral defense has been recorded and submitted for review.</p>
-            <div class="student-name" id="completeDisplayName">Student Name</div>
-            <p class="thank-you">Thank you for completing your defense!</p>
+            <div class="celebratory-border">
+              <div class="complete-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
 
-            <div class="info-box">
-              <p>Your instructor will review your essay and defense transcript. Grades will be posted according to your course schedule. You may now close this window.</p>
+              <h2>The Defense is Concluded</h2>
+              <p>Your oral examination has been recorded and submitted for review.</p>
+
+              <div class="student-name-display" id="completeDisplayName">Student Name</div>
+
+              <div class="ornamental-divider">
+                <span class="ornament-line"></span>
+                <span class="ornament-diamond"></span>
+                <span class="ornament-line"></span>
+              </div>
+
+              <p style="font-style: italic; color: var(--burgundy);">
+                "Thank you for your time and thoughtful responses.
+                May your scholarly endeavors continue to flourish."
+              </p>
+              <p style="font-size: 0.9rem;">— ChekhovBot</p>
+
+              <div class="info-box">
+                <p>Your instructor will review your essay and defense transcript.
+                Grades will be posted according to your course schedule.
+                You may now close this window.</p>
+              </div>
             </div>
+
+            <button onclick="resetPortal()" class="btn btn-secondary" style="margin-top: 20px;">
+              Start New Submission
+            </button>
           </div>
         </div>
+
       </div>
     </div>
 
-   <script src="https://unpkg.com/@elevenlabs/convai-widget-embed@beta" async type="text/javascript"></script>
+    <script src="https://unpkg.com/@elevenlabs/convai-widget-embed@beta" async type="text/javascript"></script>
 
     <script>
       // Configuration
@@ -523,7 +971,13 @@
       // State
       let currentSessionId = null;
       let studentName = null;
+      let essayText = null;
+      let defensePrompt = null;
+      let firstMessage = null;
+      let selectedQuestions = null;
       let defenseActive = false;
+      let callStartTime = null;
+      let timerInterval = null;
 
       // Character count
       function updateCharCount() {
@@ -546,11 +1000,11 @@
       function handleSubmit(event) {
         event.preventDefault();
 
-        const essay = document.getElementById('essay').value;
-        const name = document.getElementById('name').value;
+        essayText = document.getElementById('essay').value;
+        studentName = document.getElementById('name').value;
 
         // Validate length
-        if (essay.length > MAX_CHARS) {
+        if (essayText.length > MAX_CHARS) {
           alert(`Your essay exceeds the maximum length of ${MAX_CHARS.toLocaleString()} characters. Please shorten it and try again.`);
           return;
         }
@@ -568,19 +1022,23 @@
         google.script.run
           .withSuccessHandler(onSubmitSuccess)
           .withFailureHandler(onSubmitError)
-          .processSubmission({ name: name, essay: essay });
+          .processSubmission({ name: studentName, essay: essayText });
       }
 
       function onSubmitSuccess(response) {
         if (response.status === "success") {
           currentSessionId = response.sessionId;
-          studentName = document.getElementById('name').value;
+          defensePrompt = response.defensePrompt;
+          firstMessage = response.firstMessage;
+          selectedQuestions = response.selectedQuestions;
 
-          // Update display
-          document.getElementById('displayName').textContent = studentName;
+          // Update summary display
+          document.getElementById('summaryName').textContent = studentName;
+          document.getElementById('summaryEssay').textContent = essayText.substring(0, 200) + '...';
 
-          // Switch to success screen
-          showScreen('screen-success');
+          // Switch to ready screen
+          showScreen('screen-ready');
+          resetSubmitButton();
         } else {
           alert("Error: " + response.message);
           resetSubmitButton();
@@ -609,18 +1067,7 @@
         initializeWidget();
       }
 
-      function backToSuccess(event) {
-        event.preventDefault();
-        defenseActive = false;
-        showScreen('screen-success');
-
-        // Remove widget if it exists
-        const container = document.getElementById('widgetContainer');
-        container.innerHTML = '<span>Loading voice agent...</span>';
-        container.classList.add('loading');
-      }
-
-      // Initialize 11Labs widget with session_id
+      // Initialize 11Labs widget with override-prompt containing essay and questions
       function initializeWidget() {
         const container = document.getElementById('widgetContainer');
         container.innerHTML = '';
@@ -630,25 +1077,50 @@
         const widget = document.createElement('elevenlabs-convai');
         widget.setAttribute('agent-id', AGENT_ID);
 
+        // V2: Pass the complete prompt with essay and questions via override-prompt
+        widget.setAttribute('override-prompt', defensePrompt);
+        widget.setAttribute('override-first-message', firstMessage);
+
         // Pass session_id as dynamic variable for webhook correlation
         widget.setAttribute('dynamic-variables', JSON.stringify({
           session_id: currentSessionId,
           student_name: studentName
         }));
 
-        // Listen for call end events from the widget
+        // Listen for widget events
         widget.addEventListener('elevenlabs-convai:call', handleCallEvent);
         widget.addEventListener('elevenlabs-convai:conversation', handleCallEvent);
 
         container.appendChild(widget);
+
+        // Start the timer
+        startCallTimer();
+
+        // Update status after a short delay
+        setTimeout(() => {
+          updateStatus('active', 'Defense Active');
+        }, 2000);
       }
 
       // Handle call/conversation events from the widget
       function handleCallEvent(event) {
         console.log('Widget event:', event.type, event.detail);
 
-        // Check for call ended status
         const detail = event.detail || {};
+
+        // Update avatar speaking state
+        if (detail.isSpeaking !== undefined) {
+          const avatar = document.getElementById('agentAvatar');
+          if (detail.isSpeaking) {
+            avatar.classList.add('speaking');
+            updateStatus('speaking', 'ChekhovBot Speaking');
+          } else {
+            avatar.classList.remove('speaking');
+            updateStatus('active', 'Listening...');
+          }
+        }
+
+        // Check for call ended status
         if (detail.status === 'ended' ||
             detail.status === 'disconnected' ||
             event.type.includes('ended') ||
@@ -657,21 +1129,64 @@
         }
       }
 
+      function updateStatus(state, text) {
+        const indicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+
+        indicator.className = 'status-indicator ' + state;
+        statusText.textContent = text;
+      }
+
+      function startCallTimer() {
+        callStartTime = Date.now();
+        document.getElementById('callTimer').style.display = 'block';
+
+        timerInterval = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+          const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+          const seconds = (elapsed % 60).toString().padStart(2, '0');
+          document.getElementById('timerDisplay').textContent = `${minutes}:${seconds}`;
+        }, 1000);
+      }
+
+      function stopCallTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
+
       // Show the defense complete screen
       function showDefenseComplete() {
-        // Only show if defense was active
         if (!defenseActive) return;
         defenseActive = false;
+        stopCallTimer();
 
-        // Update the student name on the complete screen
         document.getElementById('completeDisplayName').textContent = studentName;
+        document.getElementById('agentAvatar').classList.remove('speaking');
 
-        // Clear the widget container
         const container = document.getElementById('widgetContainer');
         container.innerHTML = '';
 
-        // Show the completion screen
         showScreen('screen-complete');
+      }
+
+      // Reset portal for new submission
+      function resetPortal() {
+        currentSessionId = null;
+        studentName = null;
+        essayText = null;
+        defensePrompt = null;
+        firstMessage = null;
+        selectedQuestions = null;
+        defenseActive = false;
+        callStartTime = null;
+
+        document.getElementById('essayForm').reset();
+        document.getElementById('currentChars').textContent = '0';
+        document.getElementById('charCount').className = 'char-count';
+
+        showScreen('screen-welcome');
       }
 
       // Screen management
@@ -686,14 +1201,10 @@
       document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('maxChars').textContent = MAX_CHARS.toLocaleString();
 
-        // Also listen for widget events at the document level (backup)
+        // Listen for widget events at the document level
         document.addEventListener('elevenlabs-convai:call', handleCallEvent);
         document.addEventListener('elevenlabs-convai:conversation', handleCallEvent);
-
-        // Listen for the specific call-ended event pattern
-        document.addEventListener('elevenlabs-convai:call-ended', function() {
-          showDefenseComplete();
-        });
+        document.addEventListener('elevenlabs-convai:call-ended', showDefenseComplete);
       });
     </script>
 

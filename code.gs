@@ -24,6 +24,9 @@ const PROMPTS_SHEET = "Prompts";
 const QUESTIONS_SHEET = "Questions";
 const LOGS_SHEET = "Logs";
 
+// Column for storing selected questions (added for v2)
+const COL_SELECTED_QUESTIONS = 14;
+
 // ===========================================
 // SPREADSHEET LOGGING (visible in Logs tab)
 // ===========================================
@@ -87,7 +90,8 @@ const COL = {
   AI_COMMENT: 10,     // Renamed from CLAUDE_COMMENTS
   INSTRUCTOR_NOTES: 11,
   FINAL_GRADE: 12,
-  CONVERSATION_ID: 13  // New: stores 11Labs conversation_id as backup
+  CONVERSATION_ID: 13,  // stores 11Labs conversation_id as backup
+  SELECTED_QUESTIONS: 14  // v2: stores pre-selected questions for defense
 };
 
 // Status values
@@ -257,6 +261,98 @@ function shuffleArray(array) {
 }
 
 // ===========================================
+// V2: QUESTION SELECTION & PROMPT BUILDING
+// ===========================================
+
+/**
+ * Selects questions for a defense session
+ * Called during essay submission to lock in questions for this student
+ * @returns {Object} Object with content and process question arrays
+ */
+function selectQuestionsForDefense() {
+  const questions = getRandomizedQuestions();
+
+  sheetLog("selectQuestionsForDefense", "Questions selected", {
+    contentCount: questions.contentQuestions.length,
+    processCount: questions.processQuestions.length
+  });
+
+  return {
+    content: questions.contentQuestions,
+    process: questions.processQuestions
+  };
+}
+
+/**
+ * Builds the complete defense prompt with essay and scripted questions
+ * This prompt is passed to the 11Labs widget via override-prompt attribute
+ * @param {string} studentName - The student's name
+ * @param {string} essayText - The full essay text
+ * @param {Object} questions - Object with content and process question arrays
+ * @returns {string} Complete system prompt for the agent
+ */
+function buildDefensePrompt(studentName, essayText, questions) {
+  // Get the base personality prompt from the Prompts sheet
+  let basePrompt;
+  try {
+    basePrompt = getPrompt("agent_personality");
+  } catch (e) {
+    // Fallback personality if not configured
+    basePrompt = `You are ChekhovBot 5.0, a humble and devoted servant to the literary arts, conducting oral defense examinations on behalf of your master. You speak with the formal, slightly old-fashioned manner of a 19th century Russian household servant - respectful, earnest, and occasionally wry. You take your duties very seriously but maintain a warm disposition toward the students you examine.`;
+  }
+
+  // Build the numbered question list
+  let questionList = "";
+  let questionNum = 1;
+
+  questions.content.forEach(q => {
+    questionList += `${questionNum}. [Content] ${q}\n`;
+    questionNum++;
+  });
+
+  questions.process.forEach(q => {
+    questionList += `${questionNum}. [Process] ${q}\n`;
+    questionNum++;
+  });
+
+  const fullPrompt = `${basePrompt}
+
+=== CURRENT EXAMINATION ===
+
+STUDENT NAME: ${studentName}
+
+STUDENT ESSAY:
+---
+${essayText}
+---
+
+QUESTIONS TO ASK (in this order):
+${questionList}
+EXAMINATION INSTRUCTIONS:
+- Greet the student warmly and briefly introduce yourself
+- Ask each question one at a time, in the order listed above
+- Wait for the student to finish responding before asking the next question
+- Ask brief, clarifying follow-up questions when helpful (1-2 per main question max)
+- After all questions have been asked, conclude the examination graciously
+- DO NOT ask questions that are not on the list above
+- DO NOT ask the student to share or paste their essay - you already have it
+- Stay in character as a 19th century Russian servant throughout
+- Keep the examination focused and moving forward
+- Be encouraging but maintain academic standards`;
+
+  return fullPrompt;
+}
+
+/**
+ * Gets the first message for the agent (personalized greeting)
+ * @param {string} studentName - The student's name
+ * @returns {string} The first message the agent will speak
+ */
+function getFirstMessage(studentName) {
+  return `Ah, welcome, welcome, ${studentName}! I am ChekhovBot, humble servant to the literary arts. I have been entrusted with your essay and find myself most eager to discuss it with you. Please, make yourself comfortable - we shall proceed with your oral examination shortly. When you are ready, simply say so, and we shall begin.`;
+}
+
+// ===========================================
 // WEB APP ENTRY POINTS
 // ===========================================
 
@@ -325,8 +421,9 @@ function doPost(e) {
 
 /**
  * Processes a paper submission from the portal
+ * V2: Also selects questions and returns them for embedding in override-prompt
  * @param {Object} formObject - Contains name and essay fields
- * @returns {Object} Status and session_id or error message
+ * @returns {Object} Status, session_id, selected questions, and prompt data
  */
 function processSubmission(formObject) {
   try {
@@ -345,28 +442,46 @@ function processSubmission(formObject) {
     // Generate a unique session ID (UUID)
     const sessionId = generateSessionId();
 
+    // V2: Select questions for this defense (locks them in)
+    const selectedQuestions = selectQuestionsForDefense();
+
+    // V2: Build the defense prompt and first message
+    const defensePrompt = buildDefensePrompt(formObject.name, formObject.essay, selectedQuestions);
+    const firstMessage = getFirstMessage(formObject.name);
+
     // Create row with all columns (empty strings for unused columns)
-    const newRow = new Array(13).fill("");
+    const newRow = new Array(14).fill("");
     newRow[COL.TIMESTAMP - 1] = new Date();
     newRow[COL.STUDENT_NAME - 1] = formObject.name;
     newRow[COL.SESSION_ID - 1] = sessionId;
     newRow[COL.PAPER - 1] = formObject.essay;
     newRow[COL.STATUS - 1] = STATUS.SUBMITTED;
+    // V2: Store selected questions for audit trail
+    newRow[COL.SELECTED_QUESTIONS - 1] = JSON.stringify(selectedQuestions);
 
     sheet.appendRow(newRow);
 
     // Format the new row: clip text and set compact height (2 lines max)
     const newRowNum = sheet.getLastRow();
-    sheet.getRange(newRowNum, 1, 1, 13).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
+    sheet.getRange(newRowNum, 1, 1, 14).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
     sheet.setRowHeightsForced(newRowNum, 1, 42);
 
-    sheetLog("processSubmission", "Essay submitted", {
+    sheetLog("processSubmission", "Essay submitted with questions", {
       studentName: formObject.name,
       sessionId: sessionId,
-      essayLength: formObject.essay.length
+      essayLength: formObject.essay.length,
+      contentQuestions: selectedQuestions.content.length,
+      processQuestions: selectedQuestions.process.length
     });
 
-    return { status: "success", sessionId: sessionId };
+    // V2: Return everything needed to configure the widget
+    return {
+      status: "success",
+      sessionId: sessionId,
+      selectedQuestions: selectedQuestions,
+      defensePrompt: defensePrompt,
+      firstMessage: firstMessage
+    };
 
   } catch (e) {
     sheetLog("processSubmission", "ERROR", e.toString());
@@ -1038,7 +1153,8 @@ function formatDatabaseSheet() {
     [COL.AI_COMMENT]: 150,       // Long text - keep narrow
     [COL.INSTRUCTOR_NOTES]: 120, // Notes
     [COL.FINAL_GRADE]: 80,       // Grade
-    [COL.CONVERSATION_ID]: 100   // ID (clipped)
+    [COL.CONVERSATION_ID]: 100,  // ID (clipped)
+    [COL.SELECTED_QUESTIONS]: 120  // V2: JSON of selected questions
   };
 
   for (const [col, width] of Object.entries(columnWidths)) {
