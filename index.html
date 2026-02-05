@@ -523,46 +523,6 @@
         }
       }
 
-      .status-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 16px;
-        transition: all 0.3s ease;
-      }
-
-      .status-indicator.connecting {
-        background: rgba(123, 163, 181, 0.15);
-        color: var(--blue-muted);
-      }
-
-      .status-indicator.active {
-        background: rgba(74, 103, 65, 0.12);
-        color: var(--forest);
-      }
-
-      .status-indicator.speaking {
-        background: rgba(201, 162, 39, 0.15);
-        color: var(--gold);
-      }
-
-      .status-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: currentColor;
-        animation: pulse-dot 2s infinite;
-      }
-
-      @keyframes pulse-dot {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(0.85); }
-      }
-
       .defense-header h2 {
         font-family: 'Merriweather', Georgia, serif;
         font-size: 1.25rem;
@@ -614,68 +574,13 @@
                     ) border-box;
       }
 
-      /* Call Controls */
-      .call-controls-container {
-        margin-top: 20px;
-      }
-
-      .call-btn {
-        font-size: 1.1rem;
-        padding: 16px 32px;
-      }
-
-      .call-buttons {
+      /* Widget and Call Ended */
+      .widget-wrapper {
         display: flex;
         justify-content: center;
-        gap: 16px;
-        margin-bottom: 12px;
-      }
-
-      .control-btn {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        border: none;
-        cursor: pointer;
-        display: flex;
         align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-      }
-
-      .mute-btn {
-        background: var(--cream);
-        color: var(--brown);
-        border: 2px solid var(--cream-dark);
-      }
-
-      .mute-btn:hover {
-        background: var(--cream-dark);
-      }
-
-      .mute-btn.muted {
-        background: var(--terracotta);
-        color: white;
-        border-color: var(--terracotta);
-      }
-
-      .end-btn {
-        background: var(--terracotta);
-        color: white;
-        width: 64px;
-        height: 64px;
-      }
-
-      .end-btn:hover {
-        background: var(--terracotta-dark);
-        transform: scale(1.05);
-      }
-
-      .call-hint {
-        color: var(--brown);
-        font-size: 0.85rem;
-        margin: 0;
-        font-style: italic;
+        margin: 24px 0;
+        min-height: 60px;
       }
 
       .call-ended-message {
@@ -686,21 +591,7 @@
         color: var(--forest);
         font-weight: 600;
         font-size: 1.1rem;
-      }
-
-      .widget-wrapper {
-        display: flex;
-        justify-content: center;
-        margin: 16px 0;
-        min-height: 0;
-        overflow: hidden;
-        max-height: 0;
-        transition: max-height 0.3s ease;
-      }
-
-      .widget-wrapper.active {
-        max-height: 200px;
-        min-height: 60px;
+        margin-bottom: 8px;
       }
 
       /* ==================== */
@@ -986,71 +877,32 @@
                 >
               </div>
 
-              <div id="statusIndicator" class="status-indicator connecting">
-                <span class="status-dot"></span>
-                <span id="statusText">Ready to begin</span>
-              </div>
-
               <div class="defense-header">
-                <h2 id="defenseTitle">Ready for Defense</h2>
-                <p id="defenseSubtitle">Click the button below to connect with ChekhovBot</p>
+                <h2 id="defenseTitle">Begin Your Defense</h2>
+                <p id="defenseSubtitle">Click the button below to start speaking with ChekhovBot</p>
               </div>
 
               <div id="callTimer" class="call-timer" style="display: none;">
                 <span id="timerDisplay">00:00</span>
               </div>
 
-              <!-- Widget container - visible when call is active -->
+              <!-- Widget container - always visible on this screen -->
               <div id="widgetContainer" class="widget-wrapper"></div>
 
-              <!-- Call Controls -->
-              <div id="callControls" class="call-controls-container">
-                <!-- Before call starts -->
-                <div id="preCallControls">
-                  <button onclick="beginCall()" class="btn btn-success call-btn" id="startCallBtn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    Start Call with ChekhovBot
-                  </button>
+              <!-- After call ends -->
+              <div id="postCallControls" style="display: none;">
+                <div class="call-ended-message">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="var(--forest)" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Defense Complete</span>
                 </div>
-
-                <!-- During call -->
-                <div id="duringCallControls" style="display: none;">
-                  <div class="call-buttons">
-                    <button onclick="toggleMute()" class="control-btn mute-btn" id="muteBtn" title="Mute/Unmute">
-                      <svg id="muteIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                      </svg>
-                      <svg id="mutedIcon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                      </svg>
-                    </button>
-                    <button onclick="endCall()" class="control-btn end-btn" title="End Call">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2v-3.28a1 1 0 00-.684-.948l-4.493-1.498a1 1 0 00-1.21.502l-1.13 2.257a11.042 11.042 0 01-5.516-5.517l2.257-1.128a1 1 0 00.502-1.21L9.228 3.683A1 1 0 008.279 3H5z" />
-                      </svg>
-                    </button>
-                  </div>
-                  <p class="call-hint">Speak clearly into your microphone</p>
-                </div>
-
-                <!-- After call ends -->
-                <div id="postCallControls" style="display: none;">
-                  <div class="call-ended-message">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="var(--forest)" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Call Complete</span>
-                  </div>
-                  <button onclick="showDefenseComplete()" class="btn btn-primary" style="margin-top: 16px;">
-                    Continue to Results
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </button>
-                </div>
+                <button onclick="showDefenseComplete()" class="btn btn-primary" style="margin-top: 16px;">
+                  Continue
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
@@ -1205,10 +1057,9 @@
 
       // State for call
       let widgetElement = null;
-      let isMuted = false;
       let callInProgress = false;
 
-      // Start defense - go to defense screen
+      // Start defense - go directly to defense screen with widget
       function startDefense() {
         // Validate config is loaded and agent ID is set
         if (!CONFIG.agentId) {
@@ -1218,39 +1069,6 @@
 
         defenseActive = true;
         showScreen('screen-defense');
-        // Don't start the call yet - wait for user to click Start Call
-      }
-
-      // Begin the actual call
-      async function beginCall() {
-        if (callInProgress) return;
-
-        const startBtn = document.getElementById('startCallBtn');
-        startBtn.disabled = true;
-        startBtn.innerHTML = '<div class="spinner"></div> Requesting microphone...';
-
-        // First, request microphone permission
-        try {
-          await navigator.mediaDevices.getUserMedia({ audio: true });
-        } catch (err) {
-          alert('Microphone access is required for the oral defense. Please allow microphone access and try again.');
-          startBtn.disabled = false;
-          startBtn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-            </svg>
-            Start Call with ChekhovBot
-          `;
-          return;
-        }
-
-        // Update UI
-        startBtn.innerHTML = '<div class="spinner"></div> Connecting...';
-        updateStatus('connecting', 'Connecting...');
-        document.getElementById('defenseTitle').textContent = 'Connecting...';
-        document.getElementById('defenseSubtitle').textContent = 'Please wait while we connect you to ChekhovBot';
-
-        // Initialize the widget and start the session
         initializeWidget();
       }
 
@@ -1278,95 +1096,27 @@
         widgetElement.addEventListener('elevenlabs-convai:conversation', handleCallEvent);
 
         container.appendChild(widgetElement);
-
-        // Try to start the session programmatically after widget is ready
-        setTimeout(() => {
-          tryStartSession();
-        }, 500);
-      }
-
-      // Attempt to start the conversation programmatically
-      function tryStartSession() {
-        if (!widgetElement) return;
-
-        // Try different methods the widget might expose
-        if (typeof widgetElement.startSession === 'function') {
-          widgetElement.startSession();
-        } else if (typeof widgetElement.startConversation === 'function') {
-          widgetElement.startConversation();
-        } else if (typeof widgetElement.start === 'function') {
-          widgetElement.start();
-        } else {
-          // If no programmatic method, show the widget for manual interaction
-          console.log('No programmatic start method found, showing widget');
-          document.getElementById('widgetContainer').classList.add('active');
-          document.getElementById('defenseSubtitle').textContent = 'Click the call button below to connect';
-        }
       }
 
       // Show the call in progress UI
       function showCallInProgress() {
-        document.getElementById('preCallControls').style.display = 'none';
-        document.getElementById('duringCallControls').style.display = 'block';
         document.getElementById('postCallControls').style.display = 'none';
-        // Keep widget visible but small/minimal during call
-        document.getElementById('widgetContainer').classList.remove('active');
-
         document.getElementById('defenseTitle').textContent = 'Defense in Progress';
         document.getElementById('defenseSubtitle').textContent = 'Speak clearly and answer the questions';
 
-        updateStatus('active', 'Connected - Listening');
-
-        // Only start timer if not already running
+        // Start timer if not already running
         if (!timerInterval) {
           startCallTimer();
         }
       }
 
-      // Toggle mute
-      function toggleMute() {
-        isMuted = !isMuted;
-        const muteBtn = document.getElementById('muteBtn');
-        const muteIcon = document.getElementById('muteIcon');
-        const mutedIcon = document.getElementById('mutedIcon');
-
-        if (isMuted) {
-          muteBtn.classList.add('muted');
-          muteIcon.style.display = 'none';
-          mutedIcon.style.display = 'block';
-          // TODO: Actually mute the widget if API supports it
-        } else {
-          muteBtn.classList.remove('muted');
-          muteIcon.style.display = 'block';
-          mutedIcon.style.display = 'none';
-        }
-      }
-
-      // End the call
-      function endCall() {
-        callInProgress = false;
-        stopCallTimer();
-
-        // Try to end the widget conversation
-        if (widgetElement && typeof widgetElement.endConversation === 'function') {
-          widgetElement.endConversation();
-        }
-
-        showCallEnded();
-      }
-
       // Show the call ended UI
       function showCallEnded() {
-        document.getElementById('preCallControls').style.display = 'none';
-        document.getElementById('duringCallControls').style.display = 'none';
         document.getElementById('postCallControls').style.display = 'block';
-        document.getElementById('widgetContainer').classList.remove('active');
-
+        document.getElementById('widgetContainer').style.display = 'none';
         document.getElementById('defenseTitle').textContent = 'Defense Complete';
         document.getElementById('defenseSubtitle').textContent = 'Your responses have been recorded';
         document.getElementById('agentAvatar').classList.remove('speaking');
-
-        updateStatus('active', 'Call Ended');
       }
 
       // Handle call/conversation events from the widget
@@ -1390,20 +1140,16 @@
           const avatar = document.getElementById('agentAvatar');
           if (detail.isSpeaking) {
             avatar.classList.add('speaking');
-            updateStatus('speaking', 'ChekhovBot Speaking');
           } else {
             avatar.classList.remove('speaking');
-            updateStatus('active', 'Listening...');
           }
         }
 
         // Also check mode for speaking/listening
         if (detail.mode === 'speaking') {
           document.getElementById('agentAvatar').classList.add('speaking');
-          updateStatus('speaking', 'ChekhovBot Speaking');
         } else if (detail.mode === 'listening') {
           document.getElementById('agentAvatar').classList.remove('speaking');
-          updateStatus('active', 'Listening...');
         }
 
         // Check for call ended status
@@ -1417,14 +1163,6 @@
             showCallEnded();
           }
         }
-      }
-
-      function updateStatus(state, text) {
-        const indicator = document.getElementById('statusIndicator');
-        const statusText = document.getElementById('statusText');
-
-        indicator.className = 'status-indicator ' + state;
-        statusText.textContent = text;
       }
 
       function startCallTimer() {
@@ -1472,7 +1210,6 @@
         defenseActive = false;
         callStartTime = null;
         widgetElement = null;
-        isMuted = false;
         callInProgress = false;
 
         // Reset form
@@ -1481,21 +1218,11 @@
         document.getElementById('charCount').className = 'char-count';
 
         // Reset defense screen state
-        document.getElementById('preCallControls').style.display = 'block';
-        document.getElementById('duringCallControls').style.display = 'none';
         document.getElementById('postCallControls').style.display = 'none';
-        document.getElementById('startCallBtn').disabled = false;
-        document.getElementById('startCallBtn').innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-          </svg>
-          Start Call with ChekhovBot
-        `;
-        document.getElementById('defenseTitle').textContent = 'Ready for Defense';
-        document.getElementById('defenseSubtitle').textContent = 'Click the button below to connect with ChekhovBot';
-        document.getElementById('statusText').textContent = 'Ready to begin';
+        document.getElementById('defenseTitle').textContent = 'Begin Your Defense';
+        document.getElementById('defenseSubtitle').textContent = 'Click the button below to start speaking with ChekhovBot';
         document.getElementById('callTimer').style.display = 'none';
-        document.getElementById('widgetContainer').classList.remove('active');
+        document.getElementById('widgetContainer').style.display = 'flex';
         document.getElementById('widgetContainer').innerHTML = '';
 
         showScreen('screen-welcome');
