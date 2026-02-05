@@ -316,13 +316,20 @@ function selectQuestionsForDefense() {
  * @returns {string} Complete system prompt for the agent
  */
 function buildDefensePrompt(studentName, essayText, questions) {
-  // Get the base personality prompt from the Prompts sheet
-  let basePrompt;
+  // Get prompts from the Prompts sheet (with fallbacks)
+  let personalityPrompt;
+  let examinationFlow;
+
   try {
-    basePrompt = getPrompt("agent_personality");
+    personalityPrompt = getPrompt("agent_personality");
   } catch (e) {
-    // Fallback personality if not configured
-    basePrompt = `You are ChekhovBot 5.0, a humble and devoted servant to the literary arts, conducting oral defense examinations on behalf of your master. You speak with the formal, slightly old-fashioned manner of a 19th century Russian household servant - respectful, earnest, and occasionally wry. You take your duties very seriously but maintain a warm disposition toward the students you examine.`;
+    personalityPrompt = `You are ChekhovBot 5.0, a humble and devoted servant to the literary arts, conducting oral defense examinations. You speak with the formal, slightly old-fashioned manner of a 19th century Russian household servant - respectful, earnest, warm but rigorous. Keep responses concise for audio delivery.`;
+  }
+
+  try {
+    examinationFlow = getPrompt("agent_examination_flow");
+  } catch (e) {
+    examinationFlow = `Ask each question one at a time, wait for the response, then ask a brief follow-up. After all questions, conclude graciously.`;
   }
 
   // Build the numbered question list
@@ -330,16 +337,18 @@ function buildDefensePrompt(studentName, essayText, questions) {
   let questionNum = 1;
 
   questions.content.forEach(q => {
-    questionList += `${questionNum}. [Content] ${q}\n`;
+    questionList += `${questionNum}. [Content Question] ${q}\n`;
     questionNum++;
   });
 
   questions.process.forEach(q => {
-    questionList += `${questionNum}. [Process] ${q}\n`;
+    questionList += `${questionNum}. [Process Question] ${q}\n`;
     questionNum++;
   });
 
-  const fullPrompt = `${basePrompt}
+  const fullPrompt = `${personalityPrompt}
+
+${examinationFlow}
 
 === CURRENT EXAMINATION ===
 
@@ -350,19 +359,13 @@ STUDENT ESSAY:
 ${essayText}
 ---
 
-QUESTIONS TO ASK (in this order):
+QUESTIONS TO ASK (in this exact order):
 ${questionList}
-EXAMINATION INSTRUCTIONS:
-- Greet the student warmly and briefly introduce yourself
-- Ask each question one at a time, in the order listed above
-- Wait for the student to finish responding before asking the next question
-- Ask brief, clarifying follow-up questions when helpful (1-2 per main question max)
-- After all questions have been asked, conclude the examination graciously
-- DO NOT ask questions that are not on the list above
-- DO NOT ask the student to share or paste their essay - you already have it
-- Stay in character as a 19th century Russian servant throughout
-- Keep the examination focused and moving forward
-- Be encouraging but maintain academic standards`;
+CRITICAL REMINDERS:
+- You already have the essay above - do NOT ask the student to paste or share it
+- Ask questions ONE AT A TIME - never combine multiple questions
+- Stay in character throughout
+- End the call after the wrap-up phase`;
 
   return fullPrompt;
 }
