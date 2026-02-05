@@ -114,7 +114,13 @@ const DEFAULTS = {
   max_paper_length: "15000",
   webhook_secret: "default_secret_change_me",
   content_questions_count: "2",
-  process_questions_count: "1"
+  process_questions_count: "1",
+  // 11Labs configuration
+  elevenlabs_agent_id: "",
+  elevenlabs_api_key: "",
+  // UI configuration
+  app_title: "Chekhov Defense Portal",
+  app_subtitle: "Oral Examination of Literary Works"
 };
 
 // ===========================================
@@ -258,6 +264,24 @@ function shuffleArray(array) {
   }
 
   return shuffled;
+}
+
+// ===========================================
+// V2: FRONTEND CONFIGURATION
+// ===========================================
+
+/**
+ * Returns configuration values needed by the frontend
+ * Called once when the page loads to configure the UI
+ * @returns {Object} Frontend configuration object
+ */
+function getFrontendConfig() {
+  return {
+    agentId: getConfig("elevenlabs_agent_id"),
+    maxChars: parseInt(getConfig("max_paper_length")),
+    appTitle: getConfig("app_title"),
+    appSubtitle: getConfig("app_subtitle")
+  };
 }
 
 // ===========================================

@@ -964,9 +964,13 @@
     <script src="https://unpkg.com/@elevenlabs/convai-widget-embed@beta" async type="text/javascript"></script>
 
     <script>
-      // Configuration
-      const MAX_CHARS = 15000;
-      const AGENT_ID = "agent_7501kesm7cg3e53rznc4dnjckgt4";
+      // Configuration (loaded from backend)
+      let CONFIG = {
+        agentId: "",
+        maxChars: 15000,
+        appTitle: "Chekhov Defense Portal",
+        appSubtitle: "Oral Examination of Literary Works"
+      };
 
       // State
       let currentSessionId = null;
@@ -978,6 +982,7 @@
       let defenseActive = false;
       let callStartTime = null;
       let timerInterval = null;
+      let configLoaded = false;
 
       // Character count
       function updateCharCount() {
@@ -989,9 +994,9 @@
         currentChars.textContent = count.toLocaleString();
 
         charCountDiv.classList.remove('warning', 'error');
-        if (count > MAX_CHARS) {
+        if (count > CONFIG.maxChars) {
           charCountDiv.classList.add('error');
-        } else if (count > MAX_CHARS * 0.9) {
+        } else if (count > CONFIG.maxChars * 0.9) {
           charCountDiv.classList.add('warning');
         }
       }
@@ -1004,8 +1009,8 @@
         studentName = document.getElementById('name').value;
 
         // Validate length
-        if (essayText.length > MAX_CHARS) {
-          alert(`Your essay exceeds the maximum length of ${MAX_CHARS.toLocaleString()} characters. Please shorten it and try again.`);
+        if (essayText.length > CONFIG.maxChars) {
+          alert(`Your essay exceeds the maximum length of ${CONFIG.maxChars.toLocaleString()} characters. Please shorten it and try again.`);
           return;
         }
 
@@ -1062,6 +1067,12 @@
 
       // Start defense
       function startDefense() {
+        // Validate config is loaded and agent ID is set
+        if (!CONFIG.agentId) {
+          alert('Configuration error: No agent ID configured. Please add "elevenlabs_agent_id" to your Config sheet.');
+          return;
+        }
+
         defenseActive = true;
         showScreen('screen-defense');
         initializeWidget();
@@ -1075,7 +1086,7 @@
 
         // Create the widget element
         const widget = document.createElement('elevenlabs-convai');
-        widget.setAttribute('agent-id', AGENT_ID);
+        widget.setAttribute('agent-id', CONFIG.agentId);
 
         // V2: Pass the complete prompt with essay and questions via override-prompt
         widget.setAttribute('override-prompt', defensePrompt);
@@ -1197,9 +1208,38 @@
         document.getElementById(screenId).classList.add('active');
       }
 
+      // Load configuration from backend
+      function loadConfig() {
+        google.script.run
+          .withSuccessHandler(function(config) {
+            CONFIG = config;
+            configLoaded = true;
+
+            // Update UI with config values
+            document.getElementById('maxChars').textContent = CONFIG.maxChars.toLocaleString();
+
+            // Update title if provided
+            if (CONFIG.appTitle) {
+              document.querySelector('.header h1').textContent = CONFIG.appTitle;
+            }
+            if (CONFIG.appSubtitle) {
+              document.querySelector('.header p').textContent = CONFIG.appSubtitle;
+            }
+
+            console.log('Config loaded:', CONFIG);
+          })
+          .withFailureHandler(function(error) {
+            console.error('Failed to load config:', error);
+            // Use defaults already set
+            document.getElementById('maxChars').textContent = CONFIG.maxChars.toLocaleString();
+          })
+          .getFrontendConfig();
+      }
+
       // Initialize
       document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('maxChars').textContent = MAX_CHARS.toLocaleString();
+        // Load config from backend
+        loadConfig();
 
         // Listen for widget events at the document level
         document.addEventListener('elevenlabs-convai:call', handleCallEvent);
