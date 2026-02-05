@@ -120,7 +120,7 @@ const DEFAULTS = {
   elevenlabs_api_key: "",
   // UI configuration
   app_title: "Chekhov Defense Portal",
-  app_subtitle: "Oral Examination of Literary Works"
+  app_subtitle: ""  // Empty = no subtitle displayed
 };
 
 // ===========================================

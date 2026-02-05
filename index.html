@@ -1222,8 +1222,12 @@
             if (CONFIG.appTitle) {
               document.querySelector('.header h1').textContent = CONFIG.appTitle;
             }
+            // Hide subtitle if empty, otherwise update it
+            const subtitleEl = document.querySelector('.header p');
             if (CONFIG.appSubtitle) {
-              document.querySelector('.header p').textContent = CONFIG.appSubtitle;
+              subtitleEl.textContent = CONFIG.appSubtitle;
+            } else {
+              subtitleEl.style.display = 'none';
             }
 
             console.log('Config loaded:', CONFIG);
