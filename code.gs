@@ -316,19 +316,23 @@ function selectQuestionsForDefense() {
  * @returns {string} Complete system prompt for the agent
  */
 function buildDefensePrompt(studentName, essayText, questions) {
-  // Get prompts from the Prompts sheet (with fallbacks)
+  // Get prompts from the Prompts sheet (no fallbacks - fail loudly if missing)
   let personalityPrompt;
   let examinationFlow;
 
   try {
     personalityPrompt = getPrompt("agent_personality");
   } catch (e) {
+    console.error("MISSING PROMPT: agent_personality not found in Prompts sheet. Using fallback.");
+    sheetLog("buildDefensePrompt", "WARNING: Using fallback for agent_personality", e.toString());
     personalityPrompt = `You are ChekhovBot 5.0, a humble and devoted servant to the literary arts, conducting oral defense examinations. You speak with the formal, slightly old-fashioned manner of a 19th century Russian household servant - respectful, earnest, warm but rigorous. Keep responses concise for audio delivery.`;
   }
 
   try {
     examinationFlow = getPrompt("agent_examination_flow");
   } catch (e) {
+    console.error("MISSING PROMPT: agent_examination_flow not found in Prompts sheet. Using fallback.");
+    sheetLog("buildDefensePrompt", "WARNING: Using fallback for agent_examination_flow", e.toString());
     examinationFlow = `Ask each question one at a time, wait for the response, then ask a brief follow-up. After all questions, conclude graciously.`;
   }
 
@@ -376,7 +380,15 @@ CRITICAL REMINDERS:
  * @returns {string} The first message the agent will speak
  */
 function getFirstMessage(studentName) {
-  return `Ah, welcome, welcome, ${studentName}! I am ChekhovBot, humble servant to the literary arts. I have been entrusted with your essay and find myself most eager to discuss it with you. Please, make yourself comfortable - we shall proceed with your oral examination shortly. When you are ready, simply say so, and we shall begin.`;
+  try {
+    let message = getPrompt("first_message");
+    // Replace {student_name} placeholder with actual name
+    return message.replace(/\{student_name\}/gi, studentName);
+  } catch (e) {
+    console.error("MISSING PROMPT: first_message not found in Prompts sheet. Using fallback.");
+    sheetLog("getFirstMessage", "WARNING: Using fallback for first_message", e.toString());
+    return `Welcome ${studentName}, I am ChekhovBot 5.0, your humble servant of the literary arts. Thank you for submitting your essay. Please tell me when you are ready to begin your oral examination.`;
+  }
 }
 
 // ===========================================
