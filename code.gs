@@ -1016,47 +1016,53 @@ function callGemini(prompt) {
 }
 
 /**
- * Parses Gemini's grading response to extract grade and comments
- * Expects format with scores for each rubric element and a final average
+ * Parses Gemini's grading response in the structured output format
+ * Expected format has "Multiplier: X.XXX" line and optional INTEGRITY FLAGS section
  * @param {string} response - The raw response from Gemini
- * @returns {Object} Object with grade (number) and comments (string)
+ * @returns {Object} Object with grade (number), comments (string), and flagged (boolean)
  */
 function parseGradingResponse(response) {
-  // Try to extract the final grade multiplier
-  // Look for patterns like "Final Score: 0.95" or "final grade multiplier: 0.95"
-  const gradePatterns = [
-    /final\s*(?:score|grade|multiplier)[:\s]*([0-9]+\.?[0-9]*)/i,
-    /average[:\s]*([0-9]+\.?[0-9]*)/i,
-    /([0-9]+\.[0-9]+)\s*(?:final|average|overall)/i
-  ];
+  // Extract multiplier from "Multiplier: X.XXX" line
+  const multiplierMatch = response.match(/Multiplier:\s*([0-9]+\.?[0-9]*)/i);
+  let grade = multiplierMatch ? parseFloat(multiplierMatch[1]) : null;
 
-  let grade = null;
-  for (const pattern of gradePatterns) {
-    const match = response.match(pattern);
-    if (match) {
-      grade = parseFloat(match[1]);
-      break;
-    }
-  }
-
-  // If no grade found, try to calculate from individual scores
+  // Fallback: if no multiplier line, try to compute from individual 1-5 scores
   if (!grade) {
-    const scoreMatches = response.match(/(?:score|rating)[:\s]*([0-9]+\.?[0-9]*)/gi);
-    if (scoreMatches && scoreMatches.length >= 4) {
-      const scores = scoreMatches.map(m => parseFloat(m.match(/([0-9]+\.?[0-9]*)/)[1]));
-      grade = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const scoreLines = [
+      /Paper Knowledge:\s*([1-5])/i,
+      /Text Knowledge:\s*([1-5])/i,
+      /Content Understanding:\s*([1-5])/i,
+      /Writing Process:\s*([1-5])/i
+    ];
+    const scores = scoreLines.map(p => {
+      const m = response.match(p);
+      return m ? parseInt(m[1]) : null;
+    }).filter(s => s !== null);
+
+    if (scores.length === 4) {
+      const avg = scores.reduce((a, b) => a + b, 0) / 4;
+      grade = 1.00 + (avg - 3) * 0.04;
     }
   }
 
-  // Default to 1.0 if parsing fails
+  // Default to 1.0 if parsing fails entirely
   if (!grade || isNaN(grade)) {
     grade = 1.0;
     sheetLog("parseGradingResponse", "Could not parse grade, defaulting to 1.0", { response: response.substring(0, 500) });
   }
 
+  // Clamp to valid range
+  grade = Math.max(0.90, Math.min(1.05, grade));
+
+  // Check for integrity flags
+  const flagSection = response.match(/INTEGRITY FLAGS:\s*([\s\S]*?)$/i);
+  const flagText = flagSection ? flagSection[1].trim() : "";
+  const flagged = flagText.length > 0 && !/^none\.?$/i.test(flagText);
+
   return {
-    grade: Math.round(grade * 100) / 100,  // Round to 2 decimal places
-    comments: response
+    grade: Math.round(grade * 1000) / 1000,  // Round to 3 decimal places
+    comments: response,
+    flagged: flagged
   };
 }
 
@@ -1104,13 +1110,7 @@ ${submission.transcript}
 
 ---
 
-Please analyze this oral defense using the rubric above. For each of the 4 criteria, provide:
-1. The score you assign
-2. Brief justification for that score
-
-Then calculate the final average grade multiplier and provide the ~200 word rationale as specified in the rubric.
-
-Format your response with clear headings for each rubric element.`;
+Assess this defense using the rubric and output format specified above.`;
 
     // 4. Call Gemini API
     const response = callGemini(fullPrompt);
@@ -1118,26 +1118,36 @@ Format your response with clear headings for each rubric element.`;
     // 5. Parse the response
     const parsed = parseGradingResponse(response);
 
-    // 6. Update the sheet
+    // 6. Update the sheet (prefix comments with FLAG if integrity concerns)
+    const commentPrefix = parsed.flagged ? "⚠ INTEGRITY FLAG ⚠\n\n" : "";
     const updated = updateStudentStatus(sessionId, STATUS.GRADED, {
       grade: parsed.grade,
-      comments: parsed.comments
+      comments: commentPrefix + parsed.comments
     });
 
     if (!updated) {
       throw new Error("Failed to update student record");
     }
 
+    if (parsed.flagged) {
+      sheetLog("gradeDefense", "INTEGRITY FLAG", {
+        sessionId: sessionId,
+        grade: parsed.grade
+      });
+    }
+
     sheetLog("gradeDefense", "Grading complete", {
       sessionId: sessionId,
-      grade: parsed.grade
+      grade: parsed.grade,
+      flagged: parsed.flagged
     });
 
     return {
       success: true,
       sessionId: sessionId,
       grade: parsed.grade,
-      comments: parsed.comments
+      comments: parsed.comments,
+      flagged: parsed.flagged
     };
 
   } catch (error) {
