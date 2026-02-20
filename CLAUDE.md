@@ -21,7 +21,7 @@ An oral defense examination system for student essays, built as a Google Apps Sc
 1. Student submits essay via portal → `processSubmission()` generates UUID session_id, selects random questions, stores in Sheets
 2. Frontend configures 11Labs widget with `override-prompt` (essay + questions baked in) and `dynamic-variables` (session_id)
 3. Student has voice defense with ChekhovBot
-4. 11Labs sends transcript webhook → `doPost()` → `handleTranscriptWebhook()` matches by session_id and stores transcript
+4. 11Labs sends transcript webhook → `doPost()` → `handleTranscriptWebhook()` matches by session_id, fetches `call_duration_secs` from ElevenLabs API, stores transcript + call length
 5. `gradeDefense()` sends essay + transcript to Gemini with rubric from Prompts sheet → stores multiplier and structured comments
 
 ## Google Sheets Structure
@@ -39,6 +39,7 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 - The 11Labs widget is loaded from `unpkg.com/@elevenlabs/convai-widget-embed@beta`
 - Secrets (API keys) live in the Config sheet, not in code — `getConfig()` reads them at runtime
 - Prompts are fetched from the Prompts sheet via `getPrompt()` with hardcoded fallbacks in `buildDefensePrompt()` and `getFirstMessage()`
+- **Recovery**: `recoverStuckDefenses()` (Oral Defense menu → "Recover Stuck Defenses") queries the ElevenLabs API to retrieve transcripts and call duration for submissions stuck in Submitted/Defense Started status — covers cases where the webhook never fired (e.g., 11Labs errors, token exhaustion)
 
 ## Grading System
 
@@ -52,5 +53,6 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 
 - Use JSDoc comments on functions
 - Constants use UPPER_SNAKE_CASE; column indices are 1-based (matching Sheets)
-- Status values are defined in the `STATUS` object
+- Status values are defined in the `STATUS` object: Submitted → Defense Started → Defense Complete → Graded → Reviewed (also: Excluded)
+- **Exclusion**: Calls shorter than `min_call_length` config (default 60s) are auto-set to "Excluded" status and skipped by grading. To manually exclude, change the status cell to "Excluded" in the spreadsheet; to re-include, change it back to "Defense Complete"
 - Log to the Logs sheet via `sheetLog(source, message, data)` for debugging — visible in the spreadsheet

@@ -84,7 +84,7 @@ const COL = {
   PAPER: 4,
   STATUS: 5,
   DEFENSE_STARTED: 6,
-  DEFENSE_ENDED: 7,
+  CALL_LENGTH: 7,
   TRANSCRIPT: 8,
   AI_MULTIPLIER: 9,   // Renamed from CLAUDE_GRADE
   AI_COMMENT: 10,     // Renamed from CLAUDE_COMMENTS
@@ -99,6 +99,7 @@ const STATUS = {
   SUBMITTED: "Submitted",
   DEFENSE_STARTED: "Defense Started",
   DEFENSE_COMPLETE: "Defense Complete",
+  EXCLUDED: "Excluded",
   GRADED: "Graded",
   REVIEWED: "Reviewed"
 };
@@ -118,6 +119,8 @@ const DEFAULTS = {
   // 11Labs configuration
   elevenlabs_agent_id: "",
   elevenlabs_api_key: "",
+  // Grading configuration
+  min_call_length: "60",  // Calls shorter than this (seconds) are auto-excluded from grading
   // UI configuration
   app_title: "Chekhov Defense Portal",
   app_subtitle: ""  // Empty = no subtitle displayed
@@ -700,8 +703,8 @@ function updateStudentStatus(sessionId, newStatus, additionalFields = {}) {
       if (additionalFields.defenseStarted) {
         sheet.getRange(row, COL.DEFENSE_STARTED).setValue(additionalFields.defenseStarted);
       }
-      if (additionalFields.defenseEnded) {
-        sheet.getRange(row, COL.DEFENSE_ENDED).setValue(additionalFields.defenseEnded);
+      if (additionalFields.callLength !== undefined) {
+        sheet.getRange(row, COL.CALL_LENGTH).setValue(additionalFields.callLength);
       }
       if (additionalFields.transcript) {
         sheet.getRange(row, COL.TRANSCRIPT).setValue(additionalFields.transcript);
@@ -832,10 +835,37 @@ function handleTranscriptWebhook(payload) {
       studentName: submission.studentName
     });
 
+    // Fetch call duration from ElevenLabs API
+    let callLength = null;
+    if (conversationId) {
+      try {
+        const convData = getElevenLabsConversation(conversationId);
+        callLength = convData.call_duration_secs || null;
+      } catch (e) {
+        sheetLog("handleTranscriptWebhook", "Could not fetch call duration", {
+          conversationId: conversationId,
+          error: e.toString()
+        });
+      }
+    }
+
+    // Auto-exclude short calls (e.g., mic failures, immediate disconnects)
+    const minCallLength = parseInt(getConfig("min_call_length")) || 60;
+    const isExcluded = callLength !== null && callLength < minCallLength;
+    const newStatus = isExcluded ? STATUS.EXCLUDED : STATUS.DEFENSE_COMPLETE;
+
+    if (isExcluded) {
+      sheetLog("handleTranscriptWebhook", "Auto-excluding short call", {
+        sessionId: sessionId,
+        callLength: callLength,
+        minCallLength: minCallLength
+      });
+    }
+
     // Update the student record
-    const updated = updateStudentStatus(sessionId, STATUS.DEFENSE_COMPLETE, {
+    const updated = updateStudentStatus(sessionId, newStatus, {
       defenseStarted: submission.status === STATUS.SUBMITTED ? new Date() : null,
-      defenseEnded: new Date(),
+      callLength: callLength,
       transcript: transcriptText,
       conversationId: conversationId
     });
@@ -849,9 +879,10 @@ function handleTranscriptWebhook(payload) {
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      message: "Transcript saved",
+      message: isExcluded ? "Transcript saved (excluded - short call)" : "Transcript saved",
       session_id: sessionId,
-      match_method: matchMethod
+      match_method: matchMethod,
+      excluded: isExcluded
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
@@ -951,6 +982,77 @@ function getMostRecentPendingSubmission() {
   }
 
   return mostRecent;
+}
+
+// ===========================================
+// ELEVENLABS API
+// ===========================================
+
+/**
+ * Fetches conversation details from the ElevenLabs API
+ * @param {string} conversationId - The 11Labs conversation_id
+ * @returns {Object} The full conversation object (includes call_duration_secs, transcript, status, metadata)
+ */
+function getElevenLabsConversation(conversationId) {
+  const apiKey = getConfig("elevenlabs_api_key");
+  if (!apiKey) {
+    throw new Error("ElevenLabs API key not configured. Add 'elevenlabs_api_key' to Config sheet.");
+  }
+
+  const url = `https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`;
+  const options = {
+    method: "get",
+    headers: { "xi-api-key": apiKey },
+    muteHttpExceptions: true
+  };
+
+  sheetLog("getElevenLabsConversation", "Fetching conversation", { conversationId: conversationId });
+
+  const response = UrlFetchApp.fetch(url, options);
+  const responseCode = response.getResponseCode();
+  const responseText = response.getContentText();
+
+  if (responseCode !== 200) {
+    sheetLog("getElevenLabsConversation", "API Error", { code: responseCode, response: responseText });
+    throw new Error(`ElevenLabs API error (${responseCode}): ${responseText}`);
+  }
+
+  return JSON.parse(responseText);
+}
+
+/**
+ * Lists recent conversations for the configured ElevenLabs agent
+ * @param {number} pageSize - Number of conversations to fetch (default 100)
+ * @returns {Array} Array of conversation summary objects
+ */
+function listElevenLabsConversations(pageSize) {
+  pageSize = pageSize || 100;
+  const apiKey = getConfig("elevenlabs_api_key");
+  const agentId = getConfig("elevenlabs_agent_id");
+
+  if (!apiKey) {
+    throw new Error("ElevenLabs API key not configured.");
+  }
+
+  const url = `https://api.elevenlabs.io/v1/convai/conversations?agent_id=${agentId}&page_size=${pageSize}`;
+  const options = {
+    method: "get",
+    headers: { "xi-api-key": apiKey },
+    muteHttpExceptions: true
+  };
+
+  sheetLog("listElevenLabsConversations", "Listing conversations", { agentId: agentId, pageSize: pageSize });
+
+  const response = UrlFetchApp.fetch(url, options);
+  const responseCode = response.getResponseCode();
+  const responseText = response.getContentText();
+
+  if (responseCode !== 200) {
+    throw new Error(`ElevenLabs API error (${responseCode}): ${responseText}`);
+  }
+
+  const result = JSON.parse(responseText);
+  return result.conversations || [];
 }
 
 // ===========================================
@@ -1081,6 +1183,11 @@ function gradeDefense(sessionId) {
       throw new Error("Submission not found for session: " + sessionId);
     }
 
+    if (submission.status === STATUS.EXCLUDED) {
+      sheetLog("gradeDefense", "Skipping excluded submission", { sessionId: sessionId });
+      return { success: false, sessionId: sessionId, error: "Submission is excluded from grading" };
+    }
+
     if (!submission.transcript) {
       throw new Error("No transcript found for session: " + sessionId);
     }
@@ -1161,6 +1268,185 @@ Assess this defense using the rubric and output format specified above.`;
 }
 
 // ===========================================
+// DEFENSE RECOVERY
+// ===========================================
+
+/**
+ * Recovers stuck submissions by querying the ElevenLabs API.
+ * Finds submissions in "Submitted" or "Defense Started" status and attempts
+ * to retrieve their conversation data (transcript + call duration).
+ * Run from the spreadsheet's Oral Defense menu.
+ */
+function recoverStuckDefenses() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
+  const data = sheet.getDataRange().getValues();
+  const ui = SpreadsheetApp.getUi();
+
+  sheetLog("recoverStuckDefenses", "Starting recovery scan", {});
+
+  // Step 1: Find stuck submissions
+  const stuckSubmissions = [];
+  for (let i = 1; i < data.length; i++) {
+    const status = data[i][COL.STATUS - 1];
+    if (status === STATUS.SUBMITTED || status === STATUS.DEFENSE_STARTED) {
+      stuckSubmissions.push({
+        row: i + 1,
+        sessionId: data[i][COL.SESSION_ID - 1]?.toString() || "",
+        studentName: data[i][COL.STUDENT_NAME - 1],
+        status: status,
+        conversationId: data[i][COL.CONVERSATION_ID - 1]?.toString() || ""
+      });
+    }
+  }
+
+  if (stuckSubmissions.length === 0) {
+    ui.alert("Recovery", "No stuck submissions found. All submissions are either completed or graded.", ui.ButtonSet.OK);
+    sheetLog("recoverStuckDefenses", "No stuck submissions found", {});
+    return;
+  }
+
+  sheetLog("recoverStuckDefenses", "Found stuck submissions", { count: stuckSubmissions.length });
+
+  // Step 2: Fetch recent conversations from ElevenLabs to build a lookup
+  let conversationList = [];
+  try {
+    conversationList = listElevenLabsConversations(100);
+  } catch (e) {
+    sheetLog("recoverStuckDefenses", "Could not list conversations", { error: e.toString() });
+    ui.alert("Recovery Error", "Could not fetch conversations from ElevenLabs: " + e.toString(), ui.ButtonSet.OK);
+    return;
+  }
+
+  // Step 3: Process each stuck submission
+  let recoveredCount = 0;
+  let failedCount = 0;
+  const results = [];
+
+  for (const sub of stuckSubmissions) {
+    try {
+      let conversationId = sub.conversationId;
+
+      // If no conversation_id stored, try to find it from the list
+      if (!conversationId) {
+        conversationId = findConversationForSession(conversationList, sub.sessionId);
+      }
+
+      if (!conversationId) {
+        results.push(sub.studentName + ": No matching conversation found");
+        failedCount++;
+        continue;
+      }
+
+      // Fetch full conversation details
+      const convData = getElevenLabsConversation(conversationId);
+
+      // Extract transcript
+      const transcriptArray = convData.transcript || [];
+      const transcriptText = formatTranscript(transcriptArray);
+
+      if (!transcriptText || transcriptText.trim().length === 0) {
+        results.push(sub.studentName + ": Conversation found but transcript is empty");
+        failedCount++;
+        continue;
+      }
+
+      // Extract call duration and status info
+      const callLength = convData.call_duration_secs || null;
+      const convStatus = convData.status || "unknown";
+      const errorInfo = convData.metadata?.error || null;
+
+      // Auto-exclude short calls
+      const minCallLength = parseInt(getConfig("min_call_length")) || 60;
+      const isExcluded = callLength !== null && callLength < minCallLength;
+      const newStatus = isExcluded ? STATUS.EXCLUDED : STATUS.DEFENSE_COMPLETE;
+
+      // Update the database
+      const updated = updateStudentStatus(sub.sessionId, newStatus, {
+        defenseStarted: sub.status === STATUS.SUBMITTED ? new Date() : null,
+        callLength: callLength,
+        transcript: transcriptText,
+        conversationId: conversationId
+      });
+
+      if (updated) {
+        recoveredCount++;
+        const durationStr = callLength ? callLength + "s" : "unknown duration";
+        const excludedStr = isExcluded ? ", EXCLUDED" : "";
+        results.push(sub.studentName + ": RECOVERED (" + convStatus + ", " + durationStr + excludedStr + ")");
+        sheetLog("recoverStuckDefenses", "Recovered submission", {
+          sessionId: sub.sessionId,
+          studentName: sub.studentName,
+          conversationId: conversationId,
+          callLength: callLength,
+          convStatus: convStatus,
+          error: errorInfo
+        });
+      } else {
+        results.push(sub.studentName + ": Found data but failed to update row");
+        failedCount++;
+      }
+    } catch (e) {
+      results.push(sub.studentName + ": Error - " + e.toString());
+      failedCount++;
+      sheetLog("recoverStuckDefenses", "Error recovering submission", {
+        sessionId: sub.sessionId,
+        error: e.toString()
+      });
+    }
+  }
+
+  // Step 4: Report results
+  const summary = "Recovery Results:\n\nRecovered: " + recoveredCount +
+    "\nFailed: " + failedCount +
+    "\nTotal stuck: " + stuckSubmissions.length +
+    "\n\nDetails:\n" + results.join("\n");
+  ui.alert("Recovery Complete", summary, ui.ButtonSet.OK);
+  sheetLog("recoverStuckDefenses", "Recovery complete", { recovered: recoveredCount, failed: failedCount });
+}
+
+/**
+ * Searches a list of ElevenLabs conversations to find one matching a session_id.
+ * Fetches full details for up to 20 candidates to check dynamic_variables.
+ * @param {Array} conversationList - Conversation summaries from the list endpoint
+ * @param {string} sessionId - The session_id to match
+ * @returns {string|null} The conversation_id if found, null otherwise
+ */
+function findConversationForSession(conversationList, sessionId) {
+  if (!sessionId || !conversationList || conversationList.length === 0) {
+    return null;
+  }
+
+  const MAX_LOOKUPS = 20;
+  let lookupCount = 0;
+
+  for (const conv of conversationList) {
+    if (lookupCount >= MAX_LOOKUPS) break;
+
+    try {
+      lookupCount++;
+      const details = getElevenLabsConversation(conv.conversation_id);
+
+      const clientData = details.conversation_initiation_client_data || {};
+      const dynamicVars = clientData.dynamic_variables || {};
+
+      if (dynamicVars.session_id === sessionId) {
+        sheetLog("findConversationForSession", "Match found", {
+          sessionId: sessionId,
+          conversationId: conv.conversation_id
+        });
+        return conv.conversation_id;
+      }
+    } catch (e) {
+      // Skip this conversation on error, continue searching
+      continue;
+    }
+  }
+
+  return null;
+}
+
+// ===========================================
 // UTILITY FUNCTIONS
 // ===========================================
 
@@ -1196,7 +1482,7 @@ function formatDatabaseSheet() {
     [COL.PAPER]: 150,            // Long text - keep narrow
     [COL.STATUS]: 110,           // Status values
     [COL.DEFENSE_STARTED]: 130,  // Date/time
-    [COL.DEFENSE_ENDED]: 130,    // Date/time
+    [COL.CALL_LENGTH]: 80,       // Duration in seconds
     [COL.TRANSCRIPT]: 150,       // Long text - keep narrow
     [COL.AI_MULTIPLIER]: 80,     // Numeric grade
     [COL.AI_COMMENT]: 150,       // Long text - keep narrow
@@ -1251,6 +1537,7 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Oral Defense')
     .addItem('Grade All Pending', 'gradeAllPending')
+    .addItem('Recover Stuck Defenses', 'recoverStuckDefenses')
     .addItem('Refresh Status Counts', 'showStatusCounts')
     .addSeparator()
     .addItem('Format Database Sheet', 'formatDatabaseSheet')
