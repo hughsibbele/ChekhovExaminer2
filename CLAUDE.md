@@ -37,7 +37,7 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 - All backend functions are global (Apps Script requirement) — no module system
 - Frontend uses `google.script.run` for server calls (Apps Script's built-in RPC)
 - The 11Labs widget is loaded from `unpkg.com/@elevenlabs/convai-widget-embed@beta`
-- Secrets (API keys) live in the Config sheet, not in code — `getConfig()` reads them at runtime
+- Secrets (API keys, webhook secret) are stored in `PropertiesService.getScriptProperties()`, not in the spreadsheet. Non-secret config stays in the Config sheet. `getConfig()` checks PropertiesService first for secret keys, then falls back to the Config sheet. Use `setSecret(key, value)` or the migration menu item to manage secrets
 - Prompts are fetched from the Prompts sheet via `getPrompt()` with hardcoded fallbacks in `buildDefensePrompt()` and `getFirstMessage()`
 - **Recovery**: `recoverStuckDefenses()` (Oral Defense menu → "Recover Stuck Defenses") queries the ElevenLabs API to retrieve transcripts and call duration for submissions stuck in Submitted/Defense Started status — covers cases where the webhook never fired (e.g., 11Labs errors, token exhaustion)
 

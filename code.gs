@@ -104,6 +104,14 @@ const STATUS = {
   REVIEWED: "Reviewed"
 };
 
+// Keys that should be stored in PropertiesService (not the Config sheet)
+const SECRET_KEYS = [
+  "elevenlabs_api_key",
+  "gemini_api_key",
+  "webhook_secret",
+  "claude_api_key"
+];
+
 // ===========================================
 // DEFAULT VALUES (used when Config sheet doesn't exist)
 // ===========================================
@@ -131,12 +139,21 @@ const DEFAULTS = {
 // ===========================================
 
 /**
- * Retrieves a configuration value from the Config sheet
- * Falls back to DEFAULTS if Config sheet doesn't exist
+ * Retrieves a configuration value.
+ * Lookup order: PropertiesService (for secret keys) → Config sheet → DEFAULTS
  * @param {string} key - The config key to look up
  * @returns {string} The config value
  */
 function getConfig(key) {
+  // For secret keys, check PropertiesService first
+  if (SECRET_KEYS.indexOf(key) !== -1) {
+    const propValue = PropertiesService.getScriptProperties().getProperty(key);
+    if (propValue) {
+      return propValue;
+    }
+    // Fall through to Config sheet for backward compatibility (pre-migration)
+  }
+
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const configSheet = ss.getSheetByName(CONFIG_SHEET);
@@ -170,6 +187,91 @@ function getConfig(key) {
     }
     throw e;
   }
+}
+
+/**
+ * Sets a secret value in PropertiesService
+ * @param {string} key - Must be one of SECRET_KEYS
+ * @param {string} value - The secret value to store
+ */
+function setSecret(key, value) {
+  if (SECRET_KEYS.indexOf(key) === -1) {
+    throw new Error("Not a recognized secret key: " + key + ". Valid keys: " + SECRET_KEYS.join(", "));
+  }
+  PropertiesService.getScriptProperties().setProperty(key, value);
+  sheetLog("setSecret", "Secret stored in PropertiesService", { key: key });
+}
+
+/**
+ * Migrates secret values from the Config sheet to PropertiesService,
+ * then deletes the secret rows from the sheet.
+ * Safe to run multiple times (idempotent).
+ * Run from: Oral Defense menu → Migrate Secrets to Script Properties
+ */
+function migrateSecretsToProperties() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const configSheet = ss.getSheetByName(CONFIG_SHEET);
+  const ui = SpreadsheetApp.getUi();
+  const scriptProps = PropertiesService.getScriptProperties();
+
+  if (!configSheet) {
+    ui.alert("Migration", "Config sheet not found.", ui.ButtonSet.OK);
+    return;
+  }
+
+  const data = configSheet.getDataRange().getValues();
+  const migrated = [];
+  const skipped = [];
+  const rowsToDelete = [];
+
+  // Find secret keys in the Config sheet
+  for (let i = 0; i < data.length; i++) {
+    const key = data[i][0]?.toString() || "";
+    if (SECRET_KEYS.indexOf(key) === -1) continue;
+
+    const value = data[i][1]?.toString() || "";
+
+    // Skip if already in PropertiesService with same value
+    const existing = scriptProps.getProperty(key);
+    if (existing === value) {
+      skipped.push(key + " (already migrated)");
+      rowsToDelete.push(i + 1); // still delete from sheet
+      continue;
+    }
+
+    if (!value) {
+      skipped.push(key + " (empty value)");
+      continue;
+    }
+
+    // Migrate to PropertiesService
+    scriptProps.setProperty(key, value);
+    migrated.push(key);
+    rowsToDelete.push(i + 1); // 1-based row number
+  }
+
+  // Delete secret rows from Config sheet (in reverse order to preserve row indices)
+  rowsToDelete.sort((a, b) => b - a);
+  for (const row of rowsToDelete) {
+    configSheet.deleteRow(row);
+  }
+
+  // Report results
+  let message = "Migration Complete\n\n";
+  if (migrated.length > 0) {
+    message += "Migrated to Script Properties:\n" + migrated.join("\n") + "\n\n";
+  }
+  if (skipped.length > 0) {
+    message += "Skipped:\n" + skipped.join("\n") + "\n\n";
+  }
+  if (rowsToDelete.length > 0) {
+    message += "Removed " + rowsToDelete.length + " secret row(s) from Config sheet.";
+  } else if (migrated.length === 0) {
+    message += "No secrets found in Config sheet to migrate.";
+  }
+
+  ui.alert("Migrate Secrets", message, ui.ButtonSet.OK);
+  sheetLog("migrateSecretsToProperties", "Migration complete", { migrated: migrated, skipped: skipped });
 }
 
 /**
@@ -1541,6 +1643,7 @@ function onOpen() {
     .addItem('Refresh Status Counts', 'showStatusCounts')
     .addSeparator()
     .addItem('Format Database Sheet', 'formatDatabaseSheet')
+    .addItem('Migrate Secrets to Script Properties', 'migrateSecretsToProperties')
     .addToUi();
 
   // Auto-format the database sheet on open

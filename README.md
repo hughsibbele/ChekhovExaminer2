@@ -92,14 +92,29 @@ If a call ends with an ElevenLabs error (e.g., token exhaustion), the webhook ma
 4. Transcripts and call duration are retrieved even from failed conversations
 5. Results are shown in a dialog
 
+## Secrets Management
+
+API keys and the webhook secret are stored in **Script Properties** (`PropertiesService`), not in the spreadsheet. This means they're only accessible via code, not visible to anyone who can view the sheet.
+
+**Secret keys:** `elevenlabs_api_key`, `gemini_api_key`, `webhook_secret`, `claude_api_key`
+
+To set secrets, either:
+- Go to the Apps Script editor → Project Settings → Script Properties → Add/edit
+- Or use `setSecret("key", "value")` from the script editor console
+
+If you previously had secrets in the Config sheet, use **Oral Defense** menu > **Migrate Secrets to Script Properties** to move them automatically.
+
+Non-secret config (`app_title`, `min_call_length`, question counts, etc.) stays in the Config sheet for easy editing.
+
 ## Deployment
 
 1. Create a Google Spreadsheet with the tabs listed above
 2. Update `SPREADSHEET_ID` in `code.gs`
-3. Add your API keys and agent ID to the Config tab
+3. Add non-secret config to the Config tab (agent ID, model names, thresholds)
 4. Push code via [clasp](https://github.com/google/clasp) or paste into the Apps Script editor
-5. Deploy as a web app (Execute as: Me, Access: Anyone)
-6. Configure the ElevenLabs webhook to point to your web app URL with `?secret=YOUR_SECRET`
+5. Set API keys via Script Properties (Project Settings) or the migration menu item
+6. Deploy as a web app (Execute as: Me, Access: Anyone)
+7. Configure the ElevenLabs webhook to point to your web app URL with `?secret=YOUR_SECRET`
 
 ## Spreadsheet Menu
 
@@ -109,3 +124,4 @@ When the spreadsheet opens, an **Oral Defense** menu is added:
 - **Recover Stuck Defenses** — Retrieves transcripts from ElevenLabs API for stuck submissions
 - **Refresh Status Counts** — Shows a summary of submission statuses
 - **Format Database Sheet** — Applies column widths and row formatting
+- **Migrate Secrets to Script Properties** — One-time migration of API keys from Config sheet to secure storage
