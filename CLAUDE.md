@@ -14,7 +14,7 @@ An oral defense examination system for student essays, built as a Google Apps Sc
 - `code.gs` — All backend logic: web endpoints (`doGet`/`doPost`), submission processing, question selection, prompt building, transcript webhook handling, Gemini grading
 - `index.html` — Single-page frontend with 5 screens (welcome → submit → ready → defense → complete). Inline CSS and JS. Uses `google.script.run` to call backend functions
 - `appsscript.json` — Apps Script manifest (V8 runtime, Sheets + external request scopes)
-- `Prompts/` — Local reference directory (prompts are stored in the Google Sheet "Prompts" tab, not in code)
+- `Prompts` — Local reference file (tab-separated: prompt_name → prompt_text). Canonical copy lives in the Google Sheet "Prompts" tab; this file is the local mirror
 
 ## Data Flow
 
@@ -22,7 +22,7 @@ An oral defense examination system for student essays, built as a Google Apps Sc
 2. Frontend configures 11Labs widget with `override-prompt` (essay + questions baked in) and `dynamic-variables` (session_id)
 3. Student has voice defense with ChekhovBot
 4. 11Labs sends transcript webhook → `doPost()` → `handleTranscriptWebhook()` matches by session_id and stores transcript
-5. `gradeDefense()` sends essay + transcript to Gemini with rubric from Prompts sheet → stores grade
+5. `gradeDefense()` sends essay + transcript to Gemini with rubric from Prompts sheet → stores multiplier and structured comments
 
 ## Google Sheets Structure
 
@@ -39,6 +39,14 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 - The 11Labs widget is loaded from `unpkg.com/@elevenlabs/convai-widget-embed@beta`
 - Secrets (API keys) live in the Config sheet, not in code — `getConfig()` reads them at runtime
 - Prompts are fetched from the Prompts sheet via `getPrompt()` with hardcoded fallbacks in `buildDefensePrompt()` and `getFirstMessage()`
+
+## Grading System
+
+- **Rubric**: 4 elements — Paper Knowledge (1-3) and Writing Process (1-3) are capped at 3; Text Knowledge (1-5) and Content Understanding (1-5) can go higher. 3 = meets expectations
+- **Multiplier formula**: `1.00 + (average - 3) × 0.05`, clamped to [0.90, 1.05], rounded to 2 decimal places
+- **Integrity flags**: Any element scoring 1 or average ≤ 1.5 triggers a flag. Comments are prefixed with "⚠ INTEGRITY FLAG ⚠"
+- **Parser** (`parseGradingResponse`): extracts `Multiplier: X.XX` line from Gemini's structured output; falls back to computing from individual scores if that line is missing
+- Prompts: `grading_system_prompt` (role/persona) and `grading_rubric` (rubric + scoring formula + output format)
 
 ## Style Conventions
 

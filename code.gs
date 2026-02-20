@@ -1017,22 +1017,22 @@ function callGemini(prompt) {
 
 /**
  * Parses Gemini's grading response in the structured output format
- * Expected format has "Multiplier: X.XXX" line and optional INTEGRITY FLAGS section
+ * Expected format has "Multiplier: X.XX" line and optional INTEGRITY FLAGS section
  * @param {string} response - The raw response from Gemini
  * @returns {Object} Object with grade (number), comments (string), and flagged (boolean)
  */
 function parseGradingResponse(response) {
-  // Extract multiplier from "Multiplier: X.XXX" line
+  // Extract multiplier from "Multiplier: X.XX" line
   const multiplierMatch = response.match(/Multiplier:\s*([0-9]+\.?[0-9]*)/i);
   let grade = multiplierMatch ? parseFloat(multiplierMatch[1]) : null;
 
-  // Fallback: if no multiplier line, try to compute from individual 1-5 scores
+  // Fallback: if no multiplier line, try to compute from individual scores
   if (!grade) {
     const scoreLines = [
-      /Paper Knowledge:\s*([1-5])/i,
+      /Paper Knowledge:\s*([1-3])/i,
       /Text Knowledge:\s*([1-5])/i,
       /Content Understanding:\s*([1-5])/i,
-      /Writing Process:\s*([1-5])/i
+      /Writing Process:\s*([1-3])/i
     ];
     const scores = scoreLines.map(p => {
       const m = response.match(p);
@@ -1041,7 +1041,7 @@ function parseGradingResponse(response) {
 
     if (scores.length === 4) {
       const avg = scores.reduce((a, b) => a + b, 0) / 4;
-      grade = 1.00 + (avg - 3) * 0.04;
+      grade = 1.00 + (avg - 3) * 0.05;
     }
   }
 
@@ -1051,7 +1051,7 @@ function parseGradingResponse(response) {
     sheetLog("parseGradingResponse", "Could not parse grade, defaulting to 1.0", { response: response.substring(0, 500) });
   }
 
-  // Clamp to valid range
+  // Clamp to valid range (natural range with current rubric is 0.90–1.05)
   grade = Math.max(0.90, Math.min(1.05, grade));
 
   // Check for integrity flags
@@ -1060,7 +1060,7 @@ function parseGradingResponse(response) {
   const flagged = flagText.length > 0 && !/^none\.?$/i.test(flagText);
 
   return {
-    grade: Math.round(grade * 1000) / 1000,  // Round to 3 decimal places
+    grade: Math.round(grade * 100) / 100,  // Round to 2 decimal places
     comments: response,
     flagged: flagged
   };
