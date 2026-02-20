@@ -1,5 +1,5 @@
 // ===========================================
-// CHEKHOV ORAL EXAMINER - Google Apps Script
+// ORAL EXAMINER 4.0 - Google Apps Script
 // ===========================================
 // This script handles:
 // 1. Serving the student submission portal
@@ -17,7 +17,20 @@
 // ===========================================
 
 // CONFIGURATION
-const SPREADSHEET_ID = "181ZO5_JPRYsbDgJZSyzww0dqKoUmKsF_UNGfO8LZJZk";
+
+/**
+ * Returns the spreadsheet ID from Script Properties.
+ * Uses a function (not a const) so onOpen() can render the menu before setup.
+ * @returns {string} The spreadsheet ID
+ */
+function getSpreadsheetId() {
+  const id = PropertiesService.getScriptProperties().getProperty('spreadsheet_id');
+  if (!id) {
+    throw new Error('Spreadsheet ID not configured. Run Setup Wizard from the Oral Defense menu.');
+  }
+  return id;
+}
+
 const SUBMISSIONS_SHEET = "Database";  // Renamed from Sheet1
 const CONFIG_SHEET = "Config";
 const PROMPTS_SHEET = "Prompts";
@@ -39,7 +52,7 @@ const COL_SELECTED_QUESTIONS = 14;
  */
 function sheetLog(source, message, data = "") {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = SpreadsheetApp.openById(getSpreadsheetId());
     let logsSheet = ss.getSheetByName(LOGS_SHEET);
 
     // Create Logs sheet if it doesn't exist
@@ -69,7 +82,7 @@ function sheetLog(source, message, data = "") {
  * Run this manually from script editor to clear logs
  */
 function clearLogs() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const logsSheet = ss.getSheetByName(LOGS_SHEET);
   if (logsSheet && logsSheet.getLastRow() > 1) {
     logsSheet.deleteRows(2, logsSheet.getLastRow() - 1);
@@ -106,6 +119,7 @@ const STATUS = {
 
 // Keys that should be stored in PropertiesService (not the Config sheet)
 const SECRET_KEYS = [
+  "elevenlabs_agent_id",
   "elevenlabs_api_key",
   "gemini_api_key",
   "webhook_secret",
@@ -130,8 +144,9 @@ const DEFAULTS = {
   // Grading configuration
   min_call_length: "60",  // Calls shorter than this (seconds) are auto-excluded from grading
   // UI configuration
-  app_title: "Chekhov Defense Portal",
-  app_subtitle: ""  // Empty = no subtitle displayed
+  app_title: "Oral Defense Portal",
+  app_subtitle: "",  // Empty = no subtitle displayed
+  avatar_url: "https://lh3.googleusercontent.com/d/15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
 };
 
 // ===========================================
@@ -140,22 +155,19 @@ const DEFAULTS = {
 
 /**
  * Retrieves a configuration value.
- * Lookup order: PropertiesService (for secret keys) → Config sheet → DEFAULTS
+ * Lookup order: PropertiesService → Config sheet → DEFAULTS
  * @param {string} key - The config key to look up
  * @returns {string} The config value
  */
 function getConfig(key) {
-  // For secret keys, check PropertiesService first
-  if (SECRET_KEYS.indexOf(key) !== -1) {
-    const propValue = PropertiesService.getScriptProperties().getProperty(key);
-    if (propValue) {
-      return propValue;
-    }
-    // Fall through to Config sheet for backward compatibility (pre-migration)
+  // Always check PropertiesService first (for all keys)
+  const propValue = PropertiesService.getScriptProperties().getProperty(key);
+  if (propValue) {
+    return propValue;
   }
 
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = SpreadsheetApp.openById(getSpreadsheetId());
     const configSheet = ss.getSheetByName(CONFIG_SHEET);
 
     // If Config sheet doesn't exist, use defaults
@@ -209,7 +221,7 @@ function setSecret(key, value) {
  * Run from: Oral Defense menu → Migrate Secrets to Script Properties
  */
 function migrateSecretsToProperties() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const configSheet = ss.getSheetByName(CONFIG_SHEET);
   const ui = SpreadsheetApp.getUi();
   const scriptProps = PropertiesService.getScriptProperties();
@@ -281,7 +293,7 @@ function migrateSecretsToProperties() {
  */
 function getPrompt(promptName) {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = SpreadsheetApp.openById(getSpreadsheetId());
     const promptsSheet = ss.getSheetByName(PROMPTS_SHEET);
 
     if (!promptsSheet) {
@@ -317,7 +329,7 @@ function getRandomizedQuestions(contentCount, processCount) {
     processCount = parseInt(getConfig("process_questions_count"));
   }
 
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const questionsSheet = ss.getSheetByName(QUESTIONS_SHEET);
 
   if (!questionsSheet) {
@@ -385,7 +397,8 @@ function getFrontendConfig() {
     agentId: getConfig("elevenlabs_agent_id"),
     maxChars: parseInt(getConfig("max_paper_length")),
     appTitle: getConfig("app_title"),
-    appSubtitle: getConfig("app_subtitle")
+    appSubtitle: getConfig("app_subtitle"),
+    avatarUrl: getConfig("avatar_url")
   };
 }
 
@@ -430,7 +443,7 @@ function buildDefensePrompt(studentName, essayText, questions) {
   } catch (e) {
     console.error("MISSING PROMPT: agent_personality not found in Prompts sheet. Using fallback.");
     sheetLog("buildDefensePrompt", "WARNING: Using fallback for agent_personality", e.toString());
-    personalityPrompt = `You are ChekhovBot 5.0, a humble and devoted servant to the literary arts, conducting oral defense examinations. You speak with the formal, slightly old-fashioned manner of a 19th century Russian household servant - respectful, earnest, warm but rigorous. Keep responses concise for audio delivery.`;
+    personalityPrompt = `You are ExaminerBot, a professional and supportive oral defense examiner. You are respectful, encouraging, and academically rigorous. Keep responses concise for audio delivery.`;
   }
 
   try {
@@ -492,7 +505,7 @@ function getFirstMessage(studentName) {
   } catch (e) {
     console.error("MISSING PROMPT: first_message not found in Prompts sheet. Using fallback.");
     sheetLog("getFirstMessage", "WARNING: Using fallback for first_message", e.toString());
-    return `Welcome ${studentName}, I am ChekhovBot 5.0, your humble servant of the literary arts. Thank you for submitting your essay. Please tell me when you are ready to begin your oral examination.`;
+    return `Welcome ${studentName}. Thank you for submitting your essay. I will be conducting your oral examination today. Please tell me when you are ready to begin.`;
   }
 }
 
@@ -571,7 +584,7 @@ function doPost(e) {
  */
 function processSubmission(formObject) {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = SpreadsheetApp.openById(getSpreadsheetId());
     const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
 
     // Validate paper length
@@ -707,7 +720,7 @@ function handleGetQuestions(e) {
  * @returns {Object|null} Student data or null if not found
  */
 function getSubmissionBySessionId(sessionId) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
   const data = sheet.getDataRange().getValues();
 
@@ -744,7 +757,7 @@ function getSubmissionBySessionId(sessionId) {
  * @returns {Object|null} Student data or null if not found
  */
 function getSubmissionByName(name) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
   const data = sheet.getDataRange().getValues();
 
@@ -790,7 +803,7 @@ function getSubmissionByName(name) {
  * @param {Object} additionalFields - Optional fields to update
  */
 function updateStudentStatus(sessionId, newStatus, additionalFields = {}) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
   const data = sheet.getDataRange().getValues();
 
@@ -1049,7 +1062,7 @@ function extractStudentNameFromTranscript(transcript) {
  * @returns {Object|null} The most recent pending submission or null
  */
 function getMostRecentPendingSubmission() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
   const data = sheet.getDataRange().getValues();
 
@@ -1380,7 +1393,7 @@ Assess this defense using the rubric and output format specified above.`;
  * Run from the spreadsheet's Oral Defense menu.
  */
 function recoverStuckDefenses() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
   const data = sheet.getDataRange().getValues();
   const ui = SpreadsheetApp.getUi();
@@ -1549,6 +1562,204 @@ function findConversationForSession(conversationList, sessionId) {
 }
 
 // ===========================================
+// TRANSCRIPT FETCH (webhook replacement)
+// ===========================================
+
+/**
+ * Fetches and stores the transcript for a session by querying the ElevenLabs API.
+ * Called from the frontend after a call ends (replaces the need for a webhook).
+ * @param {string} sessionId - The session ID to fetch transcript for
+ * @returns {Object} { success: boolean, retryable: boolean, message: string }
+ */
+function fetchAndStoreTranscript(sessionId) {
+  try {
+    sheetLog("fetchAndStoreTranscript", "Starting fetch", { sessionId: sessionId });
+
+    // Check if transcript is already stored (webhook may have beaten us)
+    const submission = getSubmissionBySessionId(sessionId);
+    if (!submission) {
+      return { success: false, retryable: false, message: "Submission not found" };
+    }
+    if (submission.transcript && submission.transcript.length > 0 &&
+        submission.status !== STATUS.SUBMITTED && submission.status !== STATUS.DEFENSE_STARTED) {
+      sheetLog("fetchAndStoreTranscript", "Transcript already stored", { sessionId: sessionId });
+      return { success: true, retryable: false, message: "Transcript already saved" };
+    }
+
+    // List recent conversations from ElevenLabs
+    const conversationList = listElevenLabsConversations(50);
+
+    // Find the conversation matching this session
+    const conversationId = findConversationForSession(conversationList, sessionId);
+    if (!conversationId) {
+      sheetLog("fetchAndStoreTranscript", "No matching conversation found", { sessionId: sessionId });
+      return { success: false, retryable: true, message: "Conversation not found yet — may still be processing" };
+    }
+
+    // Fetch full conversation details
+    const convData = getElevenLabsConversation(conversationId);
+
+    // Check if conversation is still processing
+    if (convData.status === "processing" || convData.status === "started") {
+      return { success: false, retryable: true, message: "Conversation still processing" };
+    }
+
+    // Extract transcript
+    const transcriptArray = convData.transcript || [];
+    const transcriptText = formatTranscript(transcriptArray);
+
+    if (!transcriptText || transcriptText.trim().length === 0) {
+      return { success: false, retryable: true, message: "Transcript is empty — may still be processing" };
+    }
+
+    // Extract call duration
+    const callLength = convData.call_duration_secs || null;
+
+    // Auto-exclude short calls
+    const minCallLength = parseInt(getConfig("min_call_length")) || 60;
+    const isExcluded = callLength !== null && callLength < minCallLength;
+    const newStatus = isExcluded ? STATUS.EXCLUDED : STATUS.DEFENSE_COMPLETE;
+
+    if (isExcluded) {
+      sheetLog("fetchAndStoreTranscript", "Auto-excluding short call", {
+        sessionId: sessionId,
+        callLength: callLength,
+        minCallLength: minCallLength
+      });
+    }
+
+    // Update the student record
+    const updated = updateStudentStatus(sessionId, newStatus, {
+      defenseStarted: submission.status === STATUS.SUBMITTED ? new Date() : null,
+      callLength: callLength,
+      transcript: transcriptText,
+      conversationId: conversationId
+    });
+
+    if (!updated) {
+      return { success: false, retryable: false, message: "Failed to update record" };
+    }
+
+    sheetLog("fetchAndStoreTranscript", "Transcript saved", {
+      sessionId: sessionId,
+      callLength: callLength,
+      excluded: isExcluded
+    });
+
+    return {
+      success: true,
+      retryable: false,
+      message: isExcluded ? "Transcript saved (excluded — short call)" : "Transcript saved",
+      excluded: isExcluded
+    };
+
+  } catch (e) {
+    sheetLog("fetchAndStoreTranscript", "Error", { sessionId: sessionId, error: e.toString() });
+    return { success: false, retryable: true, message: e.toString() };
+  }
+}
+
+/**
+ * Automatic transcript recovery — runs silently via time-driven trigger.
+ * Same logic as recoverStuckDefenses() but without UI dialogs.
+ */
+function autoRecoverTranscripts() {
+  try {
+    const ss = SpreadsheetApp.openById(getSpreadsheetId());
+    const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
+    const data = sheet.getDataRange().getValues();
+
+    // Find stuck submissions
+    const stuckSubmissions = [];
+    for (let i = 1; i < data.length; i++) {
+      const status = data[i][COL.STATUS - 1];
+      if (status === STATUS.SUBMITTED || status === STATUS.DEFENSE_STARTED) {
+        stuckSubmissions.push({
+          row: i + 1,
+          sessionId: data[i][COL.SESSION_ID - 1]?.toString() || "",
+          studentName: data[i][COL.STUDENT_NAME - 1],
+          status: status,
+          conversationId: data[i][COL.CONVERSATION_ID - 1]?.toString() || ""
+        });
+      }
+    }
+
+    if (stuckSubmissions.length === 0) {
+      return; // Nothing to recover
+    }
+
+    sheetLog("autoRecoverTranscripts", "Found stuck submissions", { count: stuckSubmissions.length });
+
+    // Fetch recent conversations
+    let conversationList = [];
+    try {
+      conversationList = listElevenLabsConversations(100);
+    } catch (e) {
+      sheetLog("autoRecoverTranscripts", "Could not list conversations", { error: e.toString() });
+      return;
+    }
+
+    let recoveredCount = 0;
+
+    for (const sub of stuckSubmissions) {
+      try {
+        let conversationId = sub.conversationId;
+
+        if (!conversationId) {
+          conversationId = findConversationForSession(conversationList, sub.sessionId);
+        }
+
+        if (!conversationId) continue;
+
+        const convData = getElevenLabsConversation(conversationId);
+        const transcriptArray = convData.transcript || [];
+        const transcriptText = formatTranscript(transcriptArray);
+
+        if (!transcriptText || transcriptText.trim().length === 0) continue;
+
+        const callLength = convData.call_duration_secs || null;
+        const minCallLength = parseInt(getConfig("min_call_length")) || 60;
+        const isExcluded = callLength !== null && callLength < minCallLength;
+        const newStatus = isExcluded ? STATUS.EXCLUDED : STATUS.DEFENSE_COMPLETE;
+
+        const updated = updateStudentStatus(sub.sessionId, newStatus, {
+          defenseStarted: sub.status === STATUS.SUBMITTED ? new Date() : null,
+          callLength: callLength,
+          transcript: transcriptText,
+          conversationId: conversationId
+        });
+
+        if (updated) {
+          recoveredCount++;
+          sheetLog("autoRecoverTranscripts", "Recovered", {
+            sessionId: sub.sessionId,
+            studentName: sub.studentName,
+            callLength: callLength,
+            excluded: isExcluded
+          });
+        }
+      } catch (e) {
+        sheetLog("autoRecoverTranscripts", "Error recovering", {
+          sessionId: sub.sessionId,
+          error: e.toString()
+        });
+      }
+    }
+
+    if (recoveredCount > 0) {
+      sheetLog("autoRecoverTranscripts", "Recovery complete", {
+        recovered: recoveredCount,
+        total: stuckSubmissions.length
+      });
+    }
+
+  } catch (e) {
+    // Don't let trigger errors propagate
+    console.log("autoRecoverTranscripts error:", e.toString());
+  }
+}
+
+// ===========================================
 // UTILITY FUNCTIONS
 // ===========================================
 
@@ -1559,7 +1770,7 @@ function findConversationForSession(conversationList, sessionId) {
  * - Sets compact row heights to show more entries
  */
 function formatDatabaseSheet() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
 
   if (!sheet) {
@@ -1620,7 +1831,7 @@ function include(filename) {
  * Can be run from script editor or triggered by menu
  */
 function gradeAllPending() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
   const data = sheet.getDataRange().getValues();
 
@@ -1632,29 +1843,207 @@ function gradeAllPending() {
   }
 }
 
+// ===========================================
+// SETUP WIZARD
+// ===========================================
+
 /**
- * Creates a custom menu in the spreadsheet and applies formatting
+ * Checks if the initial setup has been completed
+ * @returns {boolean} True if all required config is set
+ */
+function isSetupComplete() {
+  const props = PropertiesService.getScriptProperties();
+  const required = ['spreadsheet_id', 'elevenlabs_agent_id', 'elevenlabs_api_key', 'gemini_api_key'];
+  return required.every(key => !!props.getProperty(key));
+}
+
+/**
+ * Shows the Setup Wizard HTML dialog
+ * Run from: Oral Defense menu → Setup Wizard
+ */
+function showSetupWizard() {
+  const html = HtmlService.createHtmlOutput(`
+    <style>
+      body { font-family: Arial, sans-serif; padding: 16px; }
+      .field { margin-bottom: 16px; }
+      label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 14px; }
+      .hint { font-size: 12px; color: #666; margin-bottom: 4px; }
+      input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+      .btn { background: #722F37; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 14px; cursor: pointer; width: 100%; }
+      .btn:hover { background: #5C252C; }
+      .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      .status { margin-top: 12px; padding: 12px; border-radius: 6px; display: none; }
+      .status.success { background: #e8f5e9; color: #2e7d32; display: block; }
+      .status.error { background: #fbe9e7; color: #c62828; display: block; }
+      h2 { margin-top: 0; color: #722F37; }
+      .required { color: #c62828; }
+    </style>
+    <h2>Oral Examiner Setup</h2>
+    <p>Enter your API credentials below. All values are stored securely in Script Properties.</p>
+
+    <div class="field">
+      <label>ElevenLabs Agent ID <span class="required">*</span></label>
+      <div class="hint">Found in your ElevenLabs Conversational AI agent settings</div>
+      <input id="agentId" placeholder="e.g. abc123xyz..." />
+    </div>
+
+    <div class="field">
+      <label>ElevenLabs API Key <span class="required">*</span></label>
+      <div class="hint">From elevenlabs.io → Profile → API Keys</div>
+      <input id="apiKey" type="password" placeholder="Your ElevenLabs API key" />
+    </div>
+
+    <div class="field">
+      <label>Gemini API Key <span class="required">*</span></label>
+      <div class="hint">From aistudio.google.com → API Keys</div>
+      <input id="geminiKey" type="password" placeholder="Your Gemini API key" />
+    </div>
+
+    <div class="field">
+      <label>App Title (optional)</label>
+      <div class="hint">Displayed in the portal header. Default: "Oral Defense Portal"</div>
+      <input id="appTitle" placeholder="Oral Defense Portal" />
+    </div>
+
+    <button class="btn" id="saveBtn" onclick="save()">Save & Complete Setup</button>
+    <div id="status" class="status"></div>
+
+    <script>
+      function save() {
+        var btn = document.getElementById('saveBtn');
+        var status = document.getElementById('status');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+        status.style.display = 'none';
+
+        var config = {
+          elevenlabs_agent_id: document.getElementById('agentId').value.trim(),
+          elevenlabs_api_key: document.getElementById('apiKey').value.trim(),
+          gemini_api_key: document.getElementById('geminiKey').value.trim(),
+          app_title: document.getElementById('appTitle').value.trim()
+        };
+
+        if (!config.elevenlabs_agent_id || !config.elevenlabs_api_key || !config.gemini_api_key) {
+          status.className = 'status error';
+          status.textContent = 'Please fill in all required fields.';
+          status.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Save & Complete Setup';
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            status.className = 'status success';
+            status.innerHTML = '<strong>Setup complete!</strong><br><br>' +
+              'Next step: Deploy as a web app.<br>' +
+              '1. Go to Extensions → Apps Script<br>' +
+              '2. Click Deploy → New deployment<br>' +
+              '3. Select "Web app"<br>' +
+              '4. Set access to "Anyone"<br>' +
+              '5. Click Deploy and copy the URL<br><br>' +
+              'Share that URL with your students.';
+            status.style.display = 'block';
+            btn.textContent = 'Setup Complete';
+          })
+          .withFailureHandler(function(error) {
+            status.className = 'status error';
+            status.textContent = 'Error: ' + error.message;
+            status.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Save & Complete Setup';
+          })
+          .runSetupWizard(config);
+      }
+    </script>
+  `)
+  .setWidth(480)
+  .setHeight(580);
+
+  SpreadsheetApp.getUi().showModalDialog(html, 'Setup Wizard — Oral Examiner 4.0');
+}
+
+/**
+ * Processes the Setup Wizard form data.
+ * Stores all values in Script Properties, auto-captures spreadsheet ID,
+ * and installs the time-driven trigger for automatic transcript recovery.
+ * @param {Object} config - Form values from the wizard dialog
+ */
+function runSetupWizard(config) {
+  const props = PropertiesService.getScriptProperties();
+
+  // Auto-capture the spreadsheet ID from the active spreadsheet
+  const ssId = SpreadsheetApp.getActiveSpreadsheet().getId();
+  props.setProperty('spreadsheet_id', ssId);
+
+  // Store required values
+  props.setProperty('elevenlabs_agent_id', config.elevenlabs_agent_id);
+  props.setProperty('elevenlabs_api_key', config.elevenlabs_api_key);
+  props.setProperty('gemini_api_key', config.gemini_api_key);
+
+  // Store optional values
+  if (config.app_title) {
+    props.setProperty('app_title', config.app_title);
+  }
+
+  // Install time-driven trigger for automatic transcript recovery
+  // First, remove any existing trigger to avoid duplicates
+  const triggers = ScriptApp.getProjectTriggers();
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'autoRecoverTranscripts') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+
+  ScriptApp.newTrigger('autoRecoverTranscripts')
+    .timeBased()
+    .everyMinutes(5)
+    .create();
+
+  sheetLog("runSetupWizard", "Setup complete", {
+    spreadsheetId: ssId,
+    agentId: config.elevenlabs_agent_id.substring(0, 8) + "...",
+    triggerInstalled: true
+  });
+
+  return { success: true };
+}
+
+/**
+ * Creates a custom menu in the spreadsheet.
+ * Shows a minimal menu before setup, full menu after setup is complete.
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu('Oral Defense')
-    .addItem('Grade All Pending', 'gradeAllPending')
-    .addItem('Recover Stuck Defenses', 'recoverStuckDefenses')
-    .addItem('Refresh Status Counts', 'showStatusCounts')
-    .addSeparator()
-    .addItem('Format Database Sheet', 'formatDatabaseSheet')
-    .addItem('Migrate Secrets to Script Properties', 'migrateSecretsToProperties')
-    .addToUi();
 
-  // Auto-format the database sheet on open
-  formatDatabaseSheet();
+  if (!isSetupComplete()) {
+    // Before setup: only show the wizard
+    ui.createMenu('Oral Defense')
+      .addItem('Setup Wizard (start here)', 'showSetupWizard')
+      .addToUi();
+  } else {
+    // After setup: full menu
+    ui.createMenu('Oral Defense')
+      .addItem('Grade All Pending', 'gradeAllPending')
+      .addItem('Recover Stuck Defenses', 'recoverStuckDefenses')
+      .addItem('Refresh Status Counts', 'showStatusCounts')
+      .addSeparator()
+      .addItem('Format Database Sheet', 'formatDatabaseSheet')
+      .addItem('Migrate Secrets to Script Properties', 'migrateSecretsToProperties')
+      .addSeparator()
+      .addItem('Re-run Setup Wizard', 'showSetupWizard')
+      .addToUi();
+
+    // Auto-format the database sheet on open
+    formatDatabaseSheet();
+  }
 }
 
 /**
  * Shows a summary of submission statuses
  */
 function showStatusCounts() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId());
   const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
   const data = sheet.getDataRange().getValues();
 

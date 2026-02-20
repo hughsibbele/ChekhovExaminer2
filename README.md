@@ -1,18 +1,44 @@
-# Chekhov Oral Examiner
+# Oral Examiner 4.0
 
-An oral defense examination system for student essays, built as a Google Apps Script web app. Students submit essays through a web portal, defend them in a voice conversation with **ChekhovBot** (an ElevenLabs conversational AI agent), and are graded automatically by Gemini.
+An oral defense examination system for student essays, built as a Google Apps Script web app. Students submit essays through a web portal, defend them in a voice conversation with an AI examiner (ElevenLabs Conversational AI), and are graded automatically by Gemini.
 
-ChekhovBot speaks with the formal manner of a 19th century Russian household servant — respectful, warm, but academically rigorous.
+The grade multiplier adjusts the student's essay grade based on how well they defended it orally. A score of 3 on all rubric elements = 1.00 multiplier (no change). Stronger defenses can earn up to 1.05; weak ones drop to 0.90.
+
+## Getting Started (~5 minutes)
+
+### 1. Copy the Template
+
+Click the template link to make your own copy of the spreadsheet (includes all tabs, prompts, and questions as sample data).
+
+### 2. Run the Setup Wizard
+
+1. Open your copied spreadsheet
+2. Go to **Oral Defense** menu > **Setup Wizard (start here)**
+3. Paste your three API keys:
+   - **ElevenLabs Agent ID** — from your ElevenLabs Conversational AI agent settings
+   - **ElevenLabs API Key** — from elevenlabs.io > Profile > API Keys
+   - **Gemini API Key** — from aistudio.google.com > API Keys
+4. Click **Save & Complete Setup**
+
+### 3. Deploy as a Web App
+
+1. Go to **Extensions > Apps Script**
+2. Click **Deploy > New deployment**
+3. Select type: **Web app**
+4. Set "Execute as": **Me** and "Who has access": **Anyone**
+5. Click **Deploy** and copy the URL
+
+Share that URL with your students. No webhook configuration needed — transcripts are fetched automatically.
 
 ## How It Works
 
 1. **Student submits essay** through the web portal
 2. **System selects randomized questions** (content + writing process) and builds a custom prompt
-3. **Student has a voice defense** with ChekhovBot via the ElevenLabs widget
-4. **Transcript is received** via webhook (or recovered via API if the call errored)
+3. **Student has a voice defense** with the examiner via the ElevenLabs widget
+4. **Student clicks "Finish Defense"** — the system fetches the transcript from the ElevenLabs API
 5. **Gemini grades the defense** against a rubric, producing a multiplier and structured comments
 
-The grade multiplier adjusts the student's essay grade based on how well they defended it orally. A score of 3 on all rubric elements = 1.00 multiplier (no change). Stronger defenses can earn up to 1.05; weak ones drop to 0.90.
+Transcripts are also recovered automatically every 5 minutes by a background trigger, as a safety net.
 
 ## Architecture
 
@@ -21,40 +47,24 @@ The grade multiplier adjusts the student's essay grade based on how well they de
 - **ElevenLabs Conversational AI** for voice-based oral defense
 - **Gemini API** for automated grading
 
-## Files
+## Customization
 
-| File | Purpose |
-|------|---------|
-| `code.gs` | All backend logic: web endpoints, submission processing, question selection, prompt building, webhook handling, ElevenLabs API integration, Gemini grading, defense recovery |
-| `index.html` | Single-page frontend with 5 screens (welcome, submit, ready, defense, complete). Inline CSS and JS |
-| `appsscript.json` | Apps Script manifest |
-| `Prompts` | Local mirror of the Prompts sheet (tab-separated) |
-| `CLAUDE.md` | Development context and conventions |
+The Prompts and Questions tabs contain sample data meant to be customized for your course:
+
+- **Prompts tab**: Edit the agent personality, examination flow, first message, grading rubric
+- **Questions tab**: Replace with your own content and process questions
+- **Config tab**: Adjust thresholds (`min_call_length`, `max_paper_length`, question counts)
+- **Avatar**: Set `avatar_url` in the Config tab to use a custom bot avatar
 
 ## Google Sheets Structure
-
-The spreadsheet serves as both database and configuration:
 
 | Tab | Purpose |
 |-----|---------|
 | **Database** | Student submissions, transcripts, grades |
-| **Config** | Key-value configuration (API keys, thresholds) |
+| **Config** | Key-value configuration (thresholds, UI settings) |
 | **Prompts** | Named prompts for the agent and grading system |
 | **Questions** | Question bank by category (content / process) |
 | **Logs** | Debug log entries from `sheetLog()` |
-
-### Key Config Values
-
-| Key | Description |
-|-----|-------------|
-| `elevenlabs_agent_id` | ElevenLabs conversational agent ID |
-| `elevenlabs_api_key` | ElevenLabs API key (for conversation details + recovery) |
-| `gemini_api_key` | Gemini API key for grading |
-| `gemini_model` | Gemini model to use (default: `gemini-3-flash-preview`) |
-| `webhook_secret` | Secret for authenticating 11Labs webhook calls |
-| `min_call_length` | Minimum call duration in seconds before auto-excluding (default: 60) |
-| `max_paper_length` | Maximum essay character count (default: 15000) |
-| `app_title` | Portal title displayed in the header |
 
 ## Grading Rubric
 
@@ -63,7 +73,7 @@ Four elements scored on different scales:
 | Element | Scale | Description |
 |---------|-------|-------------|
 | Paper Knowledge | 1-3 | How well the student knows their own essay |
-| Text Knowledge | 1-5 | Knowledge of Chekhov's texts vs. what's in the essay |
+| Text Knowledge | 1-5 | Knowledge of source texts vs. what's in the essay |
 | Content Understanding | 1-5 | Depth of analysis vs. the essay |
 | Writing Process | 1-3 | Metacognitive awareness of writing as a process |
 
@@ -72,6 +82,16 @@ Four elements scored on different scales:
 **Multiplier formula:** `1.00 + (average - 3) * 0.05`, clamped to [0.90, 1.05].
 
 **Integrity flags** are raised when any element scores 1 or the average is 1.5 or below.
+
+## Spreadsheet Menu
+
+When the spreadsheet opens, an **Oral Defense** menu is added:
+
+- **Grade All Pending** — Grades all "Defense Complete" submissions via Gemini
+- **Recover Stuck Defenses** — Retrieves transcripts from ElevenLabs API for stuck submissions
+- **Refresh Status Counts** — Shows a summary of submission statuses
+- **Format Database Sheet** — Applies column widths and row formatting
+- **Re-run Setup Wizard** — Update API keys or settings
 
 ## Call Exclusion
 
@@ -82,46 +102,6 @@ Short calls (mic failures, immediate disconnects) are automatically excluded fro
 - To manually exclude: change the status cell to `Excluded` in the spreadsheet
 - To re-include: change it back to `Defense Complete`
 
-## Defense Recovery
-
-If a call ends with an ElevenLabs error (e.g., token exhaustion), the webhook may not fire. The recovery mechanism handles this:
-
-1. Open the spreadsheet
-2. Go to **Oral Defense** menu > **Recover Stuck Defenses**
-3. The system queries the ElevenLabs API for any submissions stuck in "Submitted" or "Defense Started" status
-4. Transcripts and call duration are retrieved even from failed conversations
-5. Results are shown in a dialog
-
 ## Secrets Management
 
-API keys and the webhook secret are stored in **Script Properties** (`PropertiesService`), not in the spreadsheet. This means they're only accessible via code, not visible to anyone who can view the sheet.
-
-**Secret keys:** `elevenlabs_api_key`, `gemini_api_key`, `webhook_secret`, `claude_api_key`
-
-To set secrets, either:
-- Go to the Apps Script editor → Project Settings → Script Properties → Add/edit
-- Or use `setSecret("key", "value")` from the script editor console
-
-If you previously had secrets in the Config sheet, use **Oral Defense** menu > **Migrate Secrets to Script Properties** to move them automatically.
-
-Non-secret config (`app_title`, `min_call_length`, question counts, etc.) stays in the Config sheet for easy editing.
-
-## Deployment
-
-1. Create a Google Spreadsheet with the tabs listed above
-2. Update `SPREADSHEET_ID` in `code.gs`
-3. Add non-secret config to the Config tab (agent ID, model names, thresholds)
-4. Push code via [clasp](https://github.com/google/clasp) or paste into the Apps Script editor
-5. Set API keys via Script Properties (Project Settings) or the migration menu item
-6. Deploy as a web app (Execute as: Me, Access: Anyone)
-7. Configure the ElevenLabs webhook to point to your web app URL with `?secret=YOUR_SECRET`
-
-## Spreadsheet Menu
-
-When the spreadsheet opens, an **Oral Defense** menu is added:
-
-- **Grade All Pending** — Grades all "Defense Complete" submissions via Gemini
-- **Recover Stuck Defenses** — Retrieves transcripts from ElevenLabs API for stuck submissions
-- **Refresh Status Counts** — Shows a summary of submission statuses
-- **Format Database Sheet** — Applies column widths and row formatting
-- **Migrate Secrets to Script Properties** — One-time migration of API keys from Config sheet to secure storage
+API keys are stored in **Script Properties** (`PropertiesService`), not in the spreadsheet. The Setup Wizard handles this automatically. Non-secret config stays in the Config sheet for easy editing.
