@@ -131,7 +131,8 @@ const DEFAULTS = {
   min_call_length: "60",  // Calls shorter than this (seconds) are auto-excluded from grading
   // UI configuration
   app_title: "Chekhov Defense Portal",
-  app_subtitle: ""  // Empty = no subtitle displayed
+  app_subtitle: "",  // Empty = no subtitle displayed
+  avatar_url: "https://lh3.googleusercontent.com/d/15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
 };
 
 // ===========================================
@@ -140,18 +141,15 @@ const DEFAULTS = {
 
 /**
  * Retrieves a configuration value.
- * Lookup order: PropertiesService (for secret keys) → Config sheet → DEFAULTS
+ * Lookup order: PropertiesService → Config sheet → DEFAULTS
  * @param {string} key - The config key to look up
  * @returns {string} The config value
  */
 function getConfig(key) {
-  // For secret keys, check PropertiesService first
-  if (SECRET_KEYS.indexOf(key) !== -1) {
-    const propValue = PropertiesService.getScriptProperties().getProperty(key);
-    if (propValue) {
-      return propValue;
-    }
-    // Fall through to Config sheet for backward compatibility (pre-migration)
+  // Always check PropertiesService first (for all keys)
+  const propValue = PropertiesService.getScriptProperties().getProperty(key);
+  if (propValue) {
+    return propValue;
   }
 
   try {
@@ -385,7 +383,8 @@ function getFrontendConfig() {
     agentId: getConfig("elevenlabs_agent_id"),
     maxChars: parseInt(getConfig("max_paper_length")),
     appTitle: getConfig("app_title"),
-    appSubtitle: getConfig("app_subtitle")
+    appSubtitle: getConfig("app_subtitle"),
+    avatarUrl: getConfig("avatar_url")
   };
 }
 
@@ -1546,6 +1545,205 @@ function findConversationForSession(conversationList, sessionId) {
   }
 
   return null;
+}
+
+// ===========================================
+// TRANSCRIPT FETCH (webhook replacement)
+// ===========================================
+
+/**
+ * Fetches and stores the transcript for a session by querying the ElevenLabs API.
+ * Called from the frontend after a call ends (replaces the need for a webhook).
+ * @param {string} sessionId - The session ID to fetch transcript for
+ * @returns {Object} { success: boolean, retryable: boolean, message: string }
+ */
+function fetchAndStoreTranscript(sessionId) {
+  try {
+    sheetLog("fetchAndStoreTranscript", "Starting fetch", { sessionId: sessionId });
+
+    // Check if transcript is already stored (webhook may have beaten us)
+    const submission = getSubmissionBySessionId(sessionId);
+    if (!submission) {
+      return { success: false, retryable: false, message: "Submission not found" };
+    }
+    if (submission.transcript && submission.transcript.length > 0 &&
+        submission.status !== STATUS.SUBMITTED && submission.status !== STATUS.DEFENSE_STARTED) {
+      sheetLog("fetchAndStoreTranscript", "Transcript already stored", { sessionId: sessionId });
+      return { success: true, retryable: false, message: "Transcript already saved" };
+    }
+
+    // List recent conversations from ElevenLabs
+    const conversationList = listElevenLabsConversations(50);
+
+    // Find the conversation matching this session
+    const conversationId = findConversationForSession(conversationList, sessionId);
+    if (!conversationId) {
+      sheetLog("fetchAndStoreTranscript", "No matching conversation found", { sessionId: sessionId });
+      return { success: false, retryable: true, message: "Conversation not found yet — may still be processing" };
+    }
+
+    // Fetch full conversation details
+    const convData = getElevenLabsConversation(conversationId);
+
+    // Check if conversation is still processing
+    if (convData.status === "processing" || convData.status === "started") {
+      return { success: false, retryable: true, message: "Conversation still processing" };
+    }
+
+    // Extract transcript
+    const transcriptArray = convData.transcript || [];
+    const transcriptText = formatTranscript(transcriptArray);
+
+    if (!transcriptText || transcriptText.trim().length === 0) {
+      return { success: false, retryable: true, message: "Transcript is empty — may still be processing" };
+    }
+
+    // Extract call duration
+    const callLength = convData.call_duration_secs || null;
+
+    // Auto-exclude short calls
+    const minCallLength = parseInt(getConfig("min_call_length")) || 60;
+    const isExcluded = callLength !== null && callLength < minCallLength;
+    const newStatus = isExcluded ? STATUS.EXCLUDED : STATUS.DEFENSE_COMPLETE;
+
+    if (isExcluded) {
+      sheetLog("fetchAndStoreTranscript", "Auto-excluding short call", {
+        sessionId: sessionId,
+        callLength: callLength,
+        minCallLength: minCallLength
+      });
+    }
+
+    // Update the student record
+    const updated = updateStudentStatus(sessionId, newStatus, {
+      defenseStarted: submission.status === STATUS.SUBMITTED ? new Date() : null,
+      callLength: callLength,
+      transcript: transcriptText,
+      conversationId: conversationId
+    });
+
+    if (!updated) {
+      return { success: false, retryable: false, message: "Failed to update record" };
+    }
+
+    sheetLog("fetchAndStoreTranscript", "Transcript saved", {
+      sessionId: sessionId,
+      callLength: callLength,
+      excluded: isExcluded
+    });
+
+    return {
+      success: true,
+      retryable: false,
+      message: isExcluded ? "Transcript saved (excluded — short call)" : "Transcript saved",
+      excluded: isExcluded
+    };
+
+  } catch (e) {
+    sheetLog("fetchAndStoreTranscript", "Error", { sessionId: sessionId, error: e.toString() });
+    return { success: false, retryable: true, message: e.toString() };
+  }
+}
+
+/**
+ * Automatic transcript recovery — runs silently via time-driven trigger.
+ * Same logic as recoverStuckDefenses() but without UI dialogs.
+ * Install via: ScriptApp.newTrigger('autoRecoverTranscripts').timeBased().everyMinutes(5).create();
+ */
+function autoRecoverTranscripts() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
+    const data = sheet.getDataRange().getValues();
+
+    // Find stuck submissions
+    const stuckSubmissions = [];
+    for (let i = 1; i < data.length; i++) {
+      const status = data[i][COL.STATUS - 1];
+      if (status === STATUS.SUBMITTED || status === STATUS.DEFENSE_STARTED) {
+        stuckSubmissions.push({
+          row: i + 1,
+          sessionId: data[i][COL.SESSION_ID - 1]?.toString() || "",
+          studentName: data[i][COL.STUDENT_NAME - 1],
+          status: status,
+          conversationId: data[i][COL.CONVERSATION_ID - 1]?.toString() || ""
+        });
+      }
+    }
+
+    if (stuckSubmissions.length === 0) {
+      return; // Nothing to recover
+    }
+
+    sheetLog("autoRecoverTranscripts", "Found stuck submissions", { count: stuckSubmissions.length });
+
+    // Fetch recent conversations
+    let conversationList = [];
+    try {
+      conversationList = listElevenLabsConversations(100);
+    } catch (e) {
+      sheetLog("autoRecoverTranscripts", "Could not list conversations", { error: e.toString() });
+      return;
+    }
+
+    let recoveredCount = 0;
+
+    for (const sub of stuckSubmissions) {
+      try {
+        let conversationId = sub.conversationId;
+
+        if (!conversationId) {
+          conversationId = findConversationForSession(conversationList, sub.sessionId);
+        }
+
+        if (!conversationId) continue;
+
+        const convData = getElevenLabsConversation(conversationId);
+        const transcriptArray = convData.transcript || [];
+        const transcriptText = formatTranscript(transcriptArray);
+
+        if (!transcriptText || transcriptText.trim().length === 0) continue;
+
+        const callLength = convData.call_duration_secs || null;
+        const minCallLength = parseInt(getConfig("min_call_length")) || 60;
+        const isExcluded = callLength !== null && callLength < minCallLength;
+        const newStatus = isExcluded ? STATUS.EXCLUDED : STATUS.DEFENSE_COMPLETE;
+
+        const updated = updateStudentStatus(sub.sessionId, newStatus, {
+          defenseStarted: sub.status === STATUS.SUBMITTED ? new Date() : null,
+          callLength: callLength,
+          transcript: transcriptText,
+          conversationId: conversationId
+        });
+
+        if (updated) {
+          recoveredCount++;
+          sheetLog("autoRecoverTranscripts", "Recovered", {
+            sessionId: sub.sessionId,
+            studentName: sub.studentName,
+            callLength: callLength,
+            excluded: isExcluded
+          });
+        }
+      } catch (e) {
+        sheetLog("autoRecoverTranscripts", "Error recovering", {
+          sessionId: sub.sessionId,
+          error: e.toString()
+        });
+      }
+    }
+
+    if (recoveredCount > 0) {
+      sheetLog("autoRecoverTranscripts", "Recovery complete", {
+        recovered: recoveredCount,
+        total: stuckSubmissions.length
+      });
+    }
+
+  } catch (e) {
+    // Don't let trigger errors propagate
+    console.log("autoRecoverTranscripts error:", e.toString());
+  }
 }
 
 // ===========================================

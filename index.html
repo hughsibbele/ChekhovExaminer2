@@ -721,7 +721,7 @@
             <img
               src="https://lh3.googleusercontent.com/d/15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
               alt="ChekhovBot"
-              class="avatar-large"
+              class="avatar-large bot-avatar"
             >
             <h2 class="welcome-title">Welcome, Dear Scholar</h2>
             <p class="welcome-intro">
@@ -751,6 +751,7 @@
             <img
               src="https://lh3.googleusercontent.com/d/15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
               alt="ChekhovBot"
+              class="bot-avatar"
               style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold);"
             >
             <div>
@@ -805,7 +806,7 @@
             <img
               src="https://lh3.googleusercontent.com/d/15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
               alt="ChekhovBot"
-              class="avatar-medium"
+              class="avatar-medium bot-avatar"
             >
 
             <div class="summary-card">
@@ -872,7 +873,7 @@
                 <img
                   src="https://lh3.googleusercontent.com/d/15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
                   alt="ChekhovBot"
-                  class="agent-avatar"
+                  class="agent-avatar bot-avatar"
                   id="agentAvatar"
                 >
               </div>
@@ -889,7 +890,29 @@
               <!-- Widget container - always visible on this screen -->
               <div id="widgetContainer" class="widget-wrapper"></div>
 
-              <!-- After call ends -->
+              <!-- Finish Defense button (primary mechanism for transcript fetch) -->
+              <div id="finishDefenseControls" style="margin-top: 16px;">
+                <button onclick="finishDefense()" id="finishDefenseBtn" class="btn btn-success">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span id="finishDefenseText">Finish Defense</span>
+                  <div id="finishDefenseSpinner" class="spinner" style="display: none;"></div>
+                </button>
+                <p id="finishDefenseHint" style="font-size: 0.8rem; color: var(--brown); margin-top: 8px;">
+                  Click when your defense conversation is complete
+                </p>
+              </div>
+
+              <!-- Transcript fetch progress -->
+              <div id="transcriptFetchStatus" style="display: none; margin-top: 16px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--brown);">
+                  <div class="spinner" style="border-color: rgba(114, 47, 55, 0.3); border-top-color: var(--burgundy);"></div>
+                  <span id="fetchStatusText">Saving transcript...</span>
+                </div>
+              </div>
+
+              <!-- After transcript is saved -->
               <div id="postCallControls" style="display: none;">
                 <div class="call-ended-message">
                   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="var(--forest)" stroke-width="2">
@@ -1110,13 +1133,98 @@
         }
       }
 
-      // Show the call ended UI
+      // Show the call ended UI — triggers transcript fetch
       function showCallEnded() {
-        document.getElementById('postCallControls').style.display = 'block';
-        document.getElementById('widgetContainer').style.display = 'none';
-        document.getElementById('defenseTitle').textContent = 'Defense Complete';
-        document.getElementById('defenseSubtitle').textContent = 'Your responses have been recorded';
         document.getElementById('agentAvatar').classList.remove('speaking');
+        // If the widget fires call-ended, trigger the same fetch flow
+        if (!transcriptFetchInProgress) {
+          fetchTranscriptFromServer();
+        }
+      }
+
+      // Track fetch state to prevent duplicate calls
+      let transcriptFetchInProgress = false;
+
+      /**
+       * "Finish Defense" button click handler
+       */
+      function finishDefense() {
+        if (transcriptFetchInProgress) return;
+        fetchTranscriptFromServer();
+      }
+
+      /**
+       * Fetches transcript from server with retry logic.
+       * Waits 5s initially, then retries up to 3 times at 8s intervals.
+       */
+      function fetchTranscriptFromServer() {
+        if (transcriptFetchInProgress) return;
+        transcriptFetchInProgress = true;
+
+        // Hide button, show progress
+        document.getElementById('finishDefenseControls').style.display = 'none';
+        document.getElementById('transcriptFetchStatus').style.display = 'block';
+        document.getElementById('fetchStatusText').textContent = 'Saving transcript...';
+        document.getElementById('widgetContainer').style.display = 'none';
+
+        stopCallTimer();
+
+        // Wait 5 seconds for ElevenLabs to process, then attempt fetch
+        setTimeout(function() {
+          attemptTranscriptFetch(0);
+        }, 5000);
+      }
+
+      /**
+       * Attempts to fetch transcript, retrying up to 3 times
+       */
+      function attemptTranscriptFetch(attempt) {
+        const maxAttempts = 3;
+        if (attempt > 0) {
+          document.getElementById('fetchStatusText').textContent =
+            'Waiting for transcript... (attempt ' + (attempt + 1) + '/' + (maxAttempts + 1) + ')';
+        }
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            if (result.success) {
+              // Transcript saved successfully
+              transcriptFetchInProgress = false;
+              document.getElementById('transcriptFetchStatus').style.display = 'none';
+              document.getElementById('postCallControls').style.display = 'block';
+              document.getElementById('defenseTitle').textContent = 'Defense Complete';
+              document.getElementById('defenseSubtitle').textContent = 'Your responses have been recorded';
+            } else if (result.retryable && attempt < maxAttempts) {
+              // Retry after 8 seconds
+              setTimeout(function() {
+                attemptTranscriptFetch(attempt + 1);
+              }, 8000);
+            } else {
+              // Final failure — show message with continue option
+              transcriptFetchInProgress = false;
+              document.getElementById('transcriptFetchStatus').style.display = 'none';
+              document.getElementById('postCallControls').style.display = 'block';
+              document.getElementById('defenseTitle').textContent = 'Defense Complete';
+              document.getElementById('defenseSubtitle').textContent =
+                'Your transcript will be recovered automatically. You may close this page.';
+            }
+          })
+          .withFailureHandler(function(error) {
+            console.error('Transcript fetch error:', error);
+            if (attempt < maxAttempts) {
+              setTimeout(function() {
+                attemptTranscriptFetch(attempt + 1);
+              }, 8000);
+            } else {
+              transcriptFetchInProgress = false;
+              document.getElementById('transcriptFetchStatus').style.display = 'none';
+              document.getElementById('postCallControls').style.display = 'block';
+              document.getElementById('defenseTitle').textContent = 'Defense Complete';
+              document.getElementById('defenseSubtitle').textContent =
+                'Your transcript will be recovered automatically. You may close this page.';
+            }
+          })
+          .fetchAndStoreTranscript(currentSessionId);
       }
 
       // Handle call/conversation events from the widget
@@ -1211,6 +1319,7 @@
         callStartTime = null;
         widgetElement = null;
         callInProgress = false;
+        transcriptFetchInProgress = false;
 
         // Reset form
         document.getElementById('essayForm').reset();
@@ -1219,6 +1328,8 @@
 
         // Reset defense screen state
         document.getElementById('postCallControls').style.display = 'none';
+        document.getElementById('finishDefenseControls').style.display = 'block';
+        document.getElementById('transcriptFetchStatus').style.display = 'none';
         document.getElementById('defenseTitle').textContent = 'Begin Your Defense';
         document.getElementById('defenseSubtitle').textContent = 'Click the button below to start speaking with ChekhovBot';
         document.getElementById('callTimer').style.display = 'none';
@@ -1258,6 +1369,13 @@
               subtitleEl.style.display = 'none';
             }
 
+            // Update avatar images if custom URL provided
+            if (CONFIG.avatarUrl) {
+              document.querySelectorAll('.bot-avatar').forEach(function(img) {
+                img.src = CONFIG.avatarUrl;
+              });
+            }
+
             console.log('Config loaded:', CONFIG);
           })
           .withFailureHandler(function(error) {
@@ -1276,7 +1394,6 @@
         // Listen for widget events at the document level
         document.addEventListener('elevenlabs-convai:call', handleCallEvent);
         document.addEventListener('elevenlabs-convai:conversation', handleCallEvent);
-        document.addEventListener('elevenlabs-convai:call-ended', showDefenseComplete);
       });
     </script>
 
