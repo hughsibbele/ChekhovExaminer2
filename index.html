@@ -328,117 +328,8 @@
       }
 
       /* ==================== */
-      /* READY SCREEN         */
+      /* CHECKLIST            */
       /* ==================== */
-
-      .ready-content {
-        text-align: center;
-      }
-
-      .avatar-medium {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid var(--gold);
-        box-shadow: 0 4px 16px rgba(114, 47, 55, 0.2);
-        margin-bottom: 20px;
-      }
-
-      .summary-card {
-        background: var(--cream);
-        border: 2px solid var(--cream-dark);
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 24px;
-        text-align: left;
-      }
-
-      .summary-card h3 {
-        font-family: 'Merriweather', Georgia, serif;
-        font-size: 1rem;
-        color: var(--burgundy);
-        margin: 0 0 12px 0;
-      }
-
-      .summary-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        margin-bottom: 10px;
-        font-size: 0.9rem;
-      }
-
-      .summary-item:last-child {
-        margin-bottom: 0;
-      }
-
-      .summary-label {
-        color: var(--brown);
-        min-width: 80px;
-        font-weight: 600;
-      }
-
-      .summary-value {
-        color: var(--brown-dark);
-        flex: 1;
-      }
-
-      .essay-preview {
-        background: white;
-        padding: 10px;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        color: var(--brown);
-        font-style: italic;
-        max-height: 60px;
-        overflow: hidden;
-        position: relative;
-      }
-
-      .essay-preview::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 30px;
-        background: linear-gradient(transparent, white);
-      }
-
-      .speech-bubble {
-        background: var(--cream);
-        border: 2px solid var(--gold);
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 24px;
-        position: relative;
-        font-style: italic;
-        color: var(--brown);
-        line-height: 1.6;
-      }
-
-      .speech-bubble::before {
-        content: '';
-        position: absolute;
-        top: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        border-left: 10px solid transparent;
-        border-right: 10px solid transparent;
-        border-bottom: 10px solid var(--gold);
-      }
-
-      .speech-bubble::after {
-        content: '';
-        position: absolute;
-        top: -7px;
-        left: 50%;
-        transform: translateX(-50%);
-        border-left: 8px solid transparent;
-        border-right: 8px solid transparent;
-        border-bottom: 8px solid var(--cream);
-      }
 
       .checklist {
         background: var(--cream);
@@ -775,72 +666,7 @@
           </div>
         </div>
 
-        <!-- Screen 3: READY FOR DEFENSE -->
-        <div id="screen-ready" class="screen">
-          <div class="ready-content">
-            <img
-              src="https://lh3.googleusercontent.com/d/15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
-              alt="ChekhovBot"
-              class="avatar-medium bot-avatar"
-            >
-
-            <div class="summary-card">
-              <h3>Submission Received</h3>
-              <div class="summary-item">
-                <span class="summary-label">Student:</span>
-                <span class="summary-value" id="summaryName">-</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Essay:</span>
-                <div class="summary-value">
-                  <div class="essay-preview" id="summaryEssay">-</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="speech-bubble">
-              "Excellent! I have received your essay and have prepared my questions.
-              The examination awaits. When you are ready to proceed, we shall begin."
-            </div>
-
-            <div class="checklist">
-              <h4 class="checklist-title">Before you begin:</h4>
-              <div class="checklist-item">
-                <span class="check-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </span>
-                <span>Find a quiet space with minimal background noise</span>
-              </div>
-              <div class="checklist-item">
-                <span class="check-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </span>
-                <span>Ensure your microphone is working properly</span>
-              </div>
-              <div class="checklist-item">
-                <span class="check-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </span>
-                <span>Be prepared to discuss your essay in detail</span>
-              </div>
-            </div>
-
-            <button onclick="showDefenseScreen()" class="btn btn-success">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-              Begin Oral Defense
-            </button>
-          </div>
-        </div>
-
-        <!-- Screen 4: DEFENSE IN PROGRESS -->
+        <!-- Screen 3: DEFENSE -->
         <div id="screen-defense" class="screen">
           <div class="defense-content">
             <div class="defense-frame">
@@ -862,6 +688,35 @@
                 <span id="timerDisplay">00:00</span>
               </div>
 
+              <!-- Pre-call checklist (hidden once call starts) -->
+              <div id="preCallChecklist" class="checklist" style="margin-bottom: 16px;">
+                <h4 class="checklist-title">Before you begin:</h4>
+                <div class="checklist-item">
+                  <span class="check-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                  <span>Find a quiet space with minimal background noise</span>
+                </div>
+                <div class="checklist-item">
+                  <span class="check-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                  <span>Ensure your microphone is working properly</span>
+                </div>
+                <div class="checklist-item">
+                  <span class="check-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                  <span>Be prepared to discuss your essay in detail</span>
+                </div>
+              </div>
+
               <!-- Unified action button -->
               <div style="margin-top: 16px;">
                 <button onclick="defenseAction()" id="defenseActionBtn" class="btn btn-success">
@@ -879,7 +734,7 @@
           </div>
         </div>
 
-        <!-- Screen 5: COMPLETE -->
+        <!-- Screen 4: COMPLETE -->
         <div id="screen-complete" class="screen">
           <div class="complete-content">
             <div class="celebratory-border">
@@ -1028,12 +883,8 @@
           firstMessage = response.firstMessage;
           selectedQuestions = response.selectedQuestions;
 
-          // Update summary display
-          document.getElementById('summaryName').textContent = studentName;
-          document.getElementById('summaryEssay').textContent = essayText.substring(0, 200) + '...';
-
-          // Switch to ready screen
-          showScreen('screen-ready');
+          // Go directly to defense screen
+          showDefenseScreen();
           resetSubmitButton();
         } else {
           alert("Error: " + response.message);
@@ -1058,7 +909,7 @@
 
       // State for SDK conversation
       let conversation = null;
-      let defenseState = 'ready'; // ready | connecting | active | ending | complete
+      let defenseState = 'ready'; // ready | connecting | active
       let transcriptFetchInProgress = false;
 
       /**
@@ -1084,9 +935,6 @@
             break;
           case 'active':
             endConversation();
-            break;
-          case 'complete':
-            showDefenseComplete();
             break;
           // connecting / ending — button is disabled, ignore clicks
         }
@@ -1124,26 +972,14 @@
             icon.style.display = 'none';
             spinner.style.display = '';
             hint.textContent = 'Requesting microphone access...';
+            // Hide checklist once connecting
+            document.getElementById('preCallChecklist').style.display = 'none';
             break;
           case 'active':
             btn.classList.add('btn-danger');
             text.textContent = 'End Defense';
             icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />';
             hint.textContent = 'Click when your defense is complete';
-            break;
-          case 'ending':
-            btn.classList.add('btn-danger');
-            btn.disabled = true;
-            text.textContent = opts && opts.statusText ? opts.statusText : 'Saving...';
-            icon.style.display = 'none';
-            spinner.style.display = '';
-            hint.textContent = 'Saving transcript...';
-            break;
-          case 'complete':
-            btn.classList.add('btn-primary');
-            text.textContent = 'Continue';
-            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />';
-            hint.textContent = opts && opts.hintText ? opts.hintText : 'Defense Complete';
             break;
         }
       }
@@ -1191,6 +1027,7 @@
               if (defenseState === 'active') {
                 // Agent ended the call (not user-initiated)
                 fetchTranscriptFromServer();
+                showDefenseComplete();
               }
             },
             onModeChange: function(mode) {
@@ -1223,11 +1060,10 @@
       }
 
       /**
-       * User clicked "End Defense" — end the session, then fetch transcript.
+       * User clicked "End Defense" — end the session, fetch transcript in background, go to Complete.
        */
       async function endConversation() {
         if (!conversation) return;
-        setButtonState('ending');
         stopCallTimer();
         document.getElementById('agentAvatar').classList.remove('speaking');
 
@@ -1237,18 +1073,22 @@
           console.error('Error ending session:', err);
         }
         conversation = null;
+
+        // Fetch transcript in background (webhook is primary delivery)
         fetchTranscriptFromServer();
+
+        // Go straight to complete screen
+        showDefenseComplete();
       }
 
       /**
-       * Fetches transcript from server with retry logic.
-       * Waits 5s initially, then retries up to 3 times at 8s intervals.
+       * Fetches transcript from server with retry logic (runs in background).
+       * The Complete screen is already shown — this is belt-and-suspenders
+       * alongside the ElevenLabs webhook.
        */
       function fetchTranscriptFromServer() {
         if (transcriptFetchInProgress) return;
         transcriptFetchInProgress = true;
-
-        setButtonState('ending');
         stopCallTimer();
 
         // Wait 5 seconds for ElevenLabs to process, then attempt fetch
@@ -1262,31 +1102,19 @@
        */
       async function attemptTranscriptFetch(attempt) {
         const maxAttempts = 3;
-        if (attempt > 0) {
-          setButtonState('ending', {
-            statusText: 'Waiting for transcript... (' + (attempt + 1) + '/' + (maxAttempts + 1) + ')'
-          });
-        }
 
         try {
           const result = await callBackend("fetchTranscript", { sessionId: currentSessionId });
           if (result.success) {
             transcriptFetchInProgress = false;
-            document.getElementById('defenseTitle').textContent = 'Defense Complete';
-            document.getElementById('defenseSubtitle').textContent = 'Your responses have been recorded';
-            setButtonState('complete');
+            console.log('Transcript fetched successfully');
           } else if (result.retryable && attempt < maxAttempts) {
             setTimeout(function() {
               attemptTranscriptFetch(attempt + 1);
             }, 8000);
           } else {
             transcriptFetchInProgress = false;
-            document.getElementById('defenseTitle').textContent = 'Defense Complete';
-            document.getElementById('defenseSubtitle').textContent =
-              'Your transcript will be recovered automatically. You may close this page.';
-            setButtonState('complete', {
-              hintText: 'Transcript will be recovered automatically'
-            });
+            console.log('Transcript fetch exhausted retries — webhook will handle it');
           }
         } catch (error) {
           console.error('Transcript fetch error:', error);
@@ -1296,12 +1124,7 @@
             }, 8000);
           } else {
             transcriptFetchInProgress = false;
-            document.getElementById('defenseTitle').textContent = 'Defense Complete';
-            document.getElementById('defenseSubtitle').textContent =
-              'Your transcript will be recovered automatically. You may close this page.';
-            setButtonState('complete', {
-              hintText: 'Transcript will be recovered automatically'
-            });
+            console.log('Transcript fetch failed — webhook will handle it');
           }
         }
       }
@@ -1368,6 +1191,7 @@
         document.getElementById('defenseTitle').textContent = 'Begin Your Defense';
         document.getElementById('defenseSubtitle').textContent = 'Click the button below to start speaking with ChekhovBot';
         document.getElementById('callTimer').style.display = 'none';
+        document.getElementById('preCallChecklist').style.display = '';
         setButtonState('ready');
 
         showScreen('screen-welcome');
