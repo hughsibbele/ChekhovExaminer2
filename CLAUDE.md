@@ -52,6 +52,10 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 - **Parser** (`parseGradingResponse`): extracts `Multiplier: X.XX` line from Gemini's structured output; falls back to computing from individual scores if that line is missing
 - Prompts: `grading_system_prompt` (role/persona) and `grading_rubric` (rubric + scoring formula + output format)
 
+## TODO
+
+- Move `index.html` to `docs/index.html` and serve GitHub Pages from `/docs` instead of root. Currently the entire repo (code.gs, CLAUDE.md, Prompts, etc.) is web-accessible. Serving from `/docs` limits Pages to just the frontend.
+
 ## Style Conventions
 
 - Use JSDoc comments on functions
