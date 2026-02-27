@@ -389,6 +389,59 @@ function getFrontendConfig() {
 }
 
 // ===========================================
+// API HANDLERS (called from GitHub Pages frontend via fetch)
+// ===========================================
+
+/**
+ * Handles GET ?action=getConfig — returns frontend configuration
+ */
+function handleGetConfig(e) {
+  try {
+    const config = getFrontendConfig();
+    return ContentService.createTextOutput(JSON.stringify(config))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error", error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Handles POST ?action=submitEssay — processes essay submission
+ * Body: { name: string, essay: string }
+ */
+function handleSubmitEssay(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    const result = processSubmission({ name: body.name, essay: body.essay });
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error", error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Handles POST ?action=fetchTranscript — fetches and stores transcript
+ * Body: { sessionId: string }
+ */
+function handleFetchTranscript(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    const result = fetchAndStoreTranscript(body.sessionId);
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error", error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ===========================================
 // V2: QUESTION SELECTION & PROMPT BUILDING
 // ===========================================
 
@@ -508,6 +561,11 @@ function doGet(e) {
   console.log("=== doGet called ===");
   console.log("Action:", action || "none (serving portal)");
 
+  // API endpoint: frontend config (used by GitHub Pages frontend)
+  if (action === "getConfig") {
+    return handleGetConfig(e);
+  }
+
   // API endpoint for 11Labs to fetch randomized questions
   if (action === "getQuestions") {
     return handleGetQuestions(e);
@@ -530,6 +588,17 @@ function doPost(e) {
     console.log("=== doPost called ===");
     console.log("Content length:", e.postData?.length);
 
+    // API endpoints for frontend (GitHub Pages) — no webhook secret needed
+    const action = e?.parameter?.action;
+
+    if (action === "submitEssay") {
+      return handleSubmitEssay(e);
+    }
+    if (action === "fetchTranscript") {
+      return handleFetchTranscript(e);
+    }
+
+    // Below: ElevenLabs webhook handling (no action param)
     const payload = JSON.parse(e.postData.contents);
     console.log("Payload type:", payload.type);
 

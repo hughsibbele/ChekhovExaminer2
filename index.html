@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <base target="_top">
+    <title>Oral Defense Portal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -927,6 +927,32 @@
     <script src="https://cdn.jsdelivr.net/npm/@elevenlabs/client@0.15.0/dist/lib.umd.js"></script>
 
     <script>
+      // Apps Script deployed web-app URL (replace DEPLOYMENT_ID after deploying)
+      const APPS_SCRIPT_URL = "https://script.google.com/macros/s/DEPLOYMENT_ID/exec";
+
+      /**
+       * Calls the Apps Script backend via fetch (replaces google.script.run).
+       * Uses Content-Type: text/plain to avoid CORS preflight on POST.
+       * @param {string} action - The action parameter for routing
+       * @param {Object} [data] - Optional body for POST requests
+       * @returns {Promise<Object>} Parsed JSON response
+       */
+      async function callBackend(action, data) {
+        const url = new URL(APPS_SCRIPT_URL);
+        url.searchParams.set("action", action);
+
+        const options = { redirect: "follow" };
+        if (data !== undefined) {
+          options.method = "POST";
+          options.headers = { "Content-Type": "text/plain" };
+          options.body = JSON.stringify(data);
+        }
+
+        const response = await fetch(url.toString(), options);
+        if (!response.ok) throw new Error("Backend error: " + response.status);
+        return response.json();
+      }
+
       // Configuration (loaded from backend)
       let CONFIG = {
         agentId: "",
@@ -965,7 +991,7 @@
       }
 
       // Form submission
-      function handleSubmit(event) {
+      async function handleSubmit(event) {
         event.preventDefault();
 
         essayText = document.getElementById('essay').value;
@@ -987,10 +1013,12 @@
         submitSpinner.style.display = 'block';
 
         // Submit to backend
-        google.script.run
-          .withSuccessHandler(onSubmitSuccess)
-          .withFailureHandler(onSubmitError)
-          .processSubmission({ name: studentName, essay: essayText });
+        try {
+          const response = await callBackend("submitEssay", { name: studentName, essay: essayText });
+          onSubmitSuccess(response);
+        } catch (error) {
+          onSubmitError(error);
+        }
       }
 
       function onSubmitSuccess(response) {
@@ -1232,7 +1260,7 @@
       /**
        * Attempts to fetch transcript, retrying up to 3 times
        */
-      function attemptTranscriptFetch(attempt) {
+      async function attemptTranscriptFetch(attempt) {
         const maxAttempts = 3;
         if (attempt > 0) {
           setButtonState('ending', {
@@ -1240,44 +1268,42 @@
           });
         }
 
-        google.script.run
-          .withSuccessHandler(function(result) {
-            if (result.success) {
-              transcriptFetchInProgress = false;
-              document.getElementById('defenseTitle').textContent = 'Defense Complete';
-              document.getElementById('defenseSubtitle').textContent = 'Your responses have been recorded';
-              setButtonState('complete');
-            } else if (result.retryable && attempt < maxAttempts) {
-              setTimeout(function() {
-                attemptTranscriptFetch(attempt + 1);
-              }, 8000);
-            } else {
-              transcriptFetchInProgress = false;
-              document.getElementById('defenseTitle').textContent = 'Defense Complete';
-              document.getElementById('defenseSubtitle').textContent =
-                'Your transcript will be recovered automatically. You may close this page.';
-              setButtonState('complete', {
-                hintText: 'Transcript will be recovered automatically'
-              });
-            }
-          })
-          .withFailureHandler(function(error) {
-            console.error('Transcript fetch error:', error);
-            if (attempt < maxAttempts) {
-              setTimeout(function() {
-                attemptTranscriptFetch(attempt + 1);
-              }, 8000);
-            } else {
-              transcriptFetchInProgress = false;
-              document.getElementById('defenseTitle').textContent = 'Defense Complete';
-              document.getElementById('defenseSubtitle').textContent =
-                'Your transcript will be recovered automatically. You may close this page.';
-              setButtonState('complete', {
-                hintText: 'Transcript will be recovered automatically'
-              });
-            }
-          })
-          .fetchAndStoreTranscript(currentSessionId);
+        try {
+          const result = await callBackend("fetchTranscript", { sessionId: currentSessionId });
+          if (result.success) {
+            transcriptFetchInProgress = false;
+            document.getElementById('defenseTitle').textContent = 'Defense Complete';
+            document.getElementById('defenseSubtitle').textContent = 'Your responses have been recorded';
+            setButtonState('complete');
+          } else if (result.retryable && attempt < maxAttempts) {
+            setTimeout(function() {
+              attemptTranscriptFetch(attempt + 1);
+            }, 8000);
+          } else {
+            transcriptFetchInProgress = false;
+            document.getElementById('defenseTitle').textContent = 'Defense Complete';
+            document.getElementById('defenseSubtitle').textContent =
+              'Your transcript will be recovered automatically. You may close this page.';
+            setButtonState('complete', {
+              hintText: 'Transcript will be recovered automatically'
+            });
+          }
+        } catch (error) {
+          console.error('Transcript fetch error:', error);
+          if (attempt < maxAttempts) {
+            setTimeout(function() {
+              attemptTranscriptFetch(attempt + 1);
+            }, 8000);
+          } else {
+            transcriptFetchInProgress = false;
+            document.getElementById('defenseTitle').textContent = 'Defense Complete';
+            document.getElementById('defenseSubtitle').textContent =
+              'Your transcript will be recovered automatically. You may close this page.';
+            setButtonState('complete', {
+              hintText: 'Transcript will be recovered automatically'
+            });
+          }
+        }
       }
 
       function startCallTimer() {
@@ -1356,42 +1382,40 @@
       }
 
       // Load configuration from backend
-      function loadConfig() {
-        google.script.run
-          .withSuccessHandler(function(config) {
-            CONFIG = config;
-            configLoaded = true;
+      async function loadConfig() {
+        try {
+          const config = await callBackend("getConfig");
+          CONFIG = config;
+          configLoaded = true;
 
-            // Update UI with config values
-            document.getElementById('maxChars').textContent = CONFIG.maxChars.toLocaleString();
+          // Update UI with config values
+          document.getElementById('maxChars').textContent = CONFIG.maxChars.toLocaleString();
 
-            // Update title if provided
-            if (CONFIG.appTitle) {
-              document.querySelector('.header h1').textContent = CONFIG.appTitle;
-            }
-            // Hide subtitle if empty, otherwise update it
-            const subtitleEl = document.querySelector('.header p');
-            if (CONFIG.appSubtitle) {
-              subtitleEl.textContent = CONFIG.appSubtitle;
-            } else {
-              subtitleEl.style.display = 'none';
-            }
+          // Update title if provided
+          if (CONFIG.appTitle) {
+            document.querySelector('.header h1').textContent = CONFIG.appTitle;
+          }
+          // Hide subtitle if empty, otherwise update it
+          const subtitleEl = document.querySelector('.header p');
+          if (CONFIG.appSubtitle) {
+            subtitleEl.textContent = CONFIG.appSubtitle;
+          } else {
+            subtitleEl.style.display = 'none';
+          }
 
-            // Update avatar images if custom URL provided
-            if (CONFIG.avatarUrl) {
-              document.querySelectorAll('.bot-avatar').forEach(function(img) {
-                img.src = CONFIG.avatarUrl;
-              });
-            }
+          // Update avatar images if custom URL provided
+          if (CONFIG.avatarUrl) {
+            document.querySelectorAll('.bot-avatar').forEach(function(img) {
+              img.src = CONFIG.avatarUrl;
+            });
+          }
 
-            console.log('Config loaded:', CONFIG);
-          })
-          .withFailureHandler(function(error) {
-            console.error('Failed to load config:', error);
-            // Use defaults already set
-            document.getElementById('maxChars').textContent = CONFIG.maxChars.toLocaleString();
-          })
-          .getFrontendConfig();
+          console.log('Config loaded:', CONFIG);
+        } catch (error) {
+          console.error('Failed to load config:', error);
+          // Use defaults already set
+          document.getElementById('maxChars').textContent = CONFIG.maxChars.toLocaleString();
+        }
       }
 
       // Initialize
