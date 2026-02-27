@@ -292,6 +292,17 @@
         box-shadow: 0 4px 12px rgba(74, 103, 65, 0.4);
       }
 
+      .btn-danger {
+        background: linear-gradient(135deg, var(--red-error) 0%, #A33527 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(196, 69, 54, 0.3);
+      }
+
+      .btn-danger:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(196, 69, 54, 0.4);
+      }
+
       .btn-secondary {
         background: var(--cream);
         color: var(--brown-dark);
@@ -543,22 +554,6 @@
         margin-bottom: 16px;
       }
 
-      .widget-container {
-        background: var(--cream);
-        border-radius: 12px;
-        padding: 20px;
-        min-height: 80px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid var(--cream-dark);
-      }
-
-      .widget-container.loading {
-        color: var(--brown);
-        font-size: 0.9rem;
-      }
-
       /* Folk border frame around defense area */
       .defense-frame {
         border: 3px solid var(--gold);
@@ -572,26 +567,6 @@
                       var(--wheat-light) 5px,
                       var(--wheat-light) 10px
                     ) border-box;
-      }
-
-      /* Widget and Call Ended */
-      .widget-wrapper {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 24px 0;
-        min-height: 60px;
-      }
-
-      .call-ended-message {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        color: var(--forest);
-        font-weight: 600;
-        font-size: 1.1rem;
-        margin-bottom: 8px;
       }
 
       /* ==================== */
@@ -856,7 +831,7 @@
               </div>
             </div>
 
-            <button onclick="startDefense()" class="btn btn-success">
+            <button onclick="showDefenseScreen()" class="btn btn-success">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
@@ -887,45 +862,18 @@
                 <span id="timerDisplay">00:00</span>
               </div>
 
-              <!-- Widget container - always visible on this screen -->
-              <div id="widgetContainer" class="widget-wrapper"></div>
-
-              <!-- Finish Defense button (primary mechanism for transcript fetch) -->
-              <div id="finishDefenseControls" style="margin-top: 16px;">
-                <button onclick="finishDefense()" id="finishDefenseBtn" class="btn btn-success">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <!-- Unified action button -->
+              <div style="margin-top: 16px;">
+                <button onclick="defenseAction()" id="defenseActionBtn" class="btn btn-success">
+                  <svg id="defenseActionIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                   </svg>
-                  <span id="finishDefenseText">Finish Defense</span>
-                  <div id="finishDefenseSpinner" class="spinner" style="display: none;"></div>
+                  <span id="defenseActionText">Begin Defense</span>
+                  <div id="defenseActionSpinner" class="spinner" style="display: none;"></div>
                 </button>
-                <p id="finishDefenseHint" style="font-size: 0.8rem; color: var(--brown); margin-top: 8px;">
-                  Click when your defense conversation is complete
+                <p id="defenseActionHint" style="font-size: 0.8rem; color: var(--brown); margin-top: 8px;">
+                  Click to start speaking with ChekhovBot
                 </p>
-              </div>
-
-              <!-- Transcript fetch progress -->
-              <div id="transcriptFetchStatus" style="display: none; margin-top: 16px;">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--brown);">
-                  <div class="spinner" style="border-color: rgba(114, 47, 55, 0.3); border-top-color: var(--burgundy);"></div>
-                  <span id="fetchStatusText">Saving transcript...</span>
-                </div>
-              </div>
-
-              <!-- After transcript is saved -->
-              <div id="postCallControls" style="display: none;">
-                <div class="call-ended-message">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="var(--forest)" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Defense Complete</span>
-                </div>
-                <button onclick="showDefenseComplete()" class="btn btn-primary" style="margin-top: 16px;">
-                  Continue
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
@@ -974,7 +922,9 @@
       </div>
     </div>
 
-    <script src="https://unpkg.com/@elevenlabs/convai-widget-embed@0.9.1" async type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.11.4/dist/livekit-client.umd.min.js"></script>
+    <script>window.livekitClient = window.LivekitClient;</script>
+    <script src="https://cdn.jsdelivr.net/npm/@elevenlabs/client@0.15.0/dist/lib.umd.js"></script>
 
     <script>
       // Configuration (loaded from backend)
@@ -1078,78 +1028,187 @@
         submitSpinner.style.display = 'none';
       }
 
-      // State for call
-      let widgetElement = null;
-      let callInProgress = false;
+      // State for SDK conversation
+      let conversation = null;
+      let defenseState = 'ready'; // ready | connecting | active | ending | complete
+      let transcriptFetchInProgress = false;
 
-      // Start defense - go directly to defense screen with widget
-      function startDefense() {
-        // Validate config is loaded and agent ID is set
+      /**
+       * Navigate to the defense screen (called from ready screen button).
+       * Does NOT start the call — gives student a moment to see the UI first.
+       */
+      function showDefenseScreen() {
         if (!CONFIG.agentId) {
           alert('Configuration error: No agent ID configured. Please add "elevenlabs_agent_id" to your Config sheet.');
           return;
         }
-
         defenseActive = true;
         showScreen('screen-defense');
-        initializeWidget();
       }
-
-      // Initialize 11Labs widget with override-prompt containing essay and questions
-      function initializeWidget() {
-        const container = document.getElementById('widgetContainer');
-        container.innerHTML = '';
-
-        // Create the widget element
-        widgetElement = document.createElement('elevenlabs-convai');
-        widgetElement.setAttribute('agent-id', CONFIG.agentId);
-
-        // V2: Pass the complete prompt with essay and questions via override-prompt
-        widgetElement.setAttribute('override-prompt', defensePrompt);
-        widgetElement.setAttribute('override-first-message', firstMessage);
-
-        // Pass session_id as dynamic variable for webhook correlation
-        widgetElement.setAttribute('dynamic-variables', JSON.stringify({
-          session_id: currentSessionId,
-          student_name: studentName
-        }));
-
-        // Listen for widget events
-        widgetElement.addEventListener('elevenlabs-convai:call', handleCallEvent);
-        widgetElement.addEventListener('elevenlabs-convai:conversation', handleCallEvent);
-
-        container.appendChild(widgetElement);
-      }
-
-      // Show the call in progress UI
-      function showCallInProgress() {
-        document.getElementById('postCallControls').style.display = 'none';
-        document.getElementById('defenseTitle').textContent = 'Defense in Progress';
-        document.getElementById('defenseSubtitle').textContent = 'Speak clearly and answer the questions';
-
-        // Start timer if not already running
-        if (!timerInterval) {
-          startCallTimer();
-        }
-      }
-
-      // Show the call ended UI — triggers transcript fetch
-      function showCallEnded() {
-        document.getElementById('agentAvatar').classList.remove('speaking');
-        // If the widget fires call-ended, trigger the same fetch flow
-        if (!transcriptFetchInProgress) {
-          fetchTranscriptFromServer();
-        }
-      }
-
-      // Track fetch state to prevent duplicate calls
-      let transcriptFetchInProgress = false;
 
       /**
-       * "Finish Defense" button click handler
+       * Unified button handler — routes based on current defenseState.
        */
-      function finishDefense() {
-        if (transcriptFetchInProgress) return;
+      function defenseAction() {
+        switch (defenseState) {
+          case 'ready':
+            startConversation();
+            break;
+          case 'active':
+            endConversation();
+            break;
+          case 'complete':
+            showDefenseComplete();
+            break;
+          // connecting / ending — button is disabled, ignore clicks
+        }
+      }
+
+      /**
+       * Updates the defense action button appearance for the given state.
+       */
+      function setButtonState(state, opts) {
+        const btn = document.getElementById('defenseActionBtn');
+        const text = document.getElementById('defenseActionText');
+        const icon = document.getElementById('defenseActionIcon');
+        const spinner = document.getElementById('defenseActionSpinner');
+        const hint = document.getElementById('defenseActionHint');
+
+        defenseState = state;
+
+        // Reset classes
+        btn.className = 'btn';
+        btn.disabled = false;
+        icon.style.display = '';
+        spinner.style.display = 'none';
+
+        switch (state) {
+          case 'ready':
+            btn.classList.add('btn-success');
+            text.textContent = 'Begin Defense';
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />';
+            hint.textContent = 'Click to start speaking with ChekhovBot';
+            break;
+          case 'connecting':
+            btn.classList.add('btn-success');
+            btn.disabled = true;
+            text.textContent = 'Connecting...';
+            icon.style.display = 'none';
+            spinner.style.display = '';
+            hint.textContent = 'Requesting microphone access...';
+            break;
+          case 'active':
+            btn.classList.add('btn-danger');
+            text.textContent = 'End Defense';
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />';
+            hint.textContent = 'Click when your defense is complete';
+            break;
+          case 'ending':
+            btn.classList.add('btn-danger');
+            btn.disabled = true;
+            text.textContent = opts && opts.statusText ? opts.statusText : 'Saving...';
+            icon.style.display = 'none';
+            spinner.style.display = '';
+            hint.textContent = 'Saving transcript...';
+            break;
+          case 'complete':
+            btn.classList.add('btn-primary');
+            text.textContent = 'Continue';
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />';
+            hint.textContent = opts && opts.hintText ? opts.hintText : 'Defense Complete';
+            break;
+        }
+      }
+
+      /**
+       * Starts the ElevenLabs SDK conversation session.
+       */
+      async function startConversation() {
+        if (!window.client || !window.client.Conversation) {
+          alert('Voice SDK failed to load. Please refresh the page and try again.');
+          return;
+        }
+
+        setButtonState('connecting');
+
+        try {
+          // Request microphone access explicitly so we get a clear error on denial
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+
+          conversation = await window.client.Conversation.startSession({
+            agentId: CONFIG.agentId,
+            overrides: {
+              agent: {
+                prompt: { prompt: defensePrompt },
+                firstMessage: firstMessage
+              }
+            },
+            dynamicVariables: {
+              session_id: currentSessionId,
+              student_name: studentName
+            },
+            onConnect: function() {
+              console.log('SDK: connected');
+              setButtonState('active');
+              document.getElementById('defenseTitle').textContent = 'Defense in Progress';
+              document.getElementById('defenseSubtitle').textContent = 'Speak clearly and answer the questions';
+              if (!timerInterval) {
+                startCallTimer();
+              }
+            },
+            onDisconnect: function() {
+              console.log('SDK: disconnected');
+              document.getElementById('agentAvatar').classList.remove('speaking');
+              conversation = null;
+              if (defenseState === 'active') {
+                // Agent ended the call (not user-initiated)
+                fetchTranscriptFromServer();
+              }
+            },
+            onModeChange: function(mode) {
+              const avatar = document.getElementById('agentAvatar');
+              if (mode.mode === 'speaking') {
+                avatar.classList.add('speaking');
+              } else {
+                avatar.classList.remove('speaking');
+              }
+            },
+            onError: function(error) {
+              console.error('SDK error:', error);
+              if (defenseState === 'connecting') {
+                alert('Connection error: ' + (error.message || 'Unable to connect. Please try again.'));
+                setButtonState('ready');
+                conversation = null;
+              }
+            }
+          });
+        } catch (err) {
+          console.error('Failed to start conversation:', err);
+          if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            alert('Microphone access was denied. Please allow microphone access and try again.');
+          } else {
+            alert('Failed to start defense: ' + (err.message || 'Unknown error'));
+          }
+          setButtonState('ready');
+          conversation = null;
+        }
+      }
+
+      /**
+       * User clicked "End Defense" — end the session, then fetch transcript.
+       */
+      async function endConversation() {
+        if (!conversation) return;
+        setButtonState('ending');
+        stopCallTimer();
+        document.getElementById('agentAvatar').classList.remove('speaking');
+
+        try {
+          await conversation.endSession();
+        } catch (err) {
+          console.error('Error ending session:', err);
+        }
+        conversation = null;
         fetchTranscriptFromServer();
       }
 
@@ -1161,12 +1220,7 @@
         if (transcriptFetchInProgress) return;
         transcriptFetchInProgress = true;
 
-        // Hide button, show progress
-        document.getElementById('finishDefenseControls').style.display = 'none';
-        document.getElementById('transcriptFetchStatus').style.display = 'block';
-        document.getElementById('fetchStatusText').textContent = 'Saving transcript...';
-        document.getElementById('widgetContainer').style.display = 'none';
-
+        setButtonState('ending');
         stopCallTimer();
 
         // Wait 5 seconds for ElevenLabs to process, then attempt fetch
@@ -1181,32 +1235,30 @@
       function attemptTranscriptFetch(attempt) {
         const maxAttempts = 3;
         if (attempt > 0) {
-          document.getElementById('fetchStatusText').textContent =
-            'Waiting for transcript... (attempt ' + (attempt + 1) + '/' + (maxAttempts + 1) + ')';
+          setButtonState('ending', {
+            statusText: 'Waiting for transcript... (' + (attempt + 1) + '/' + (maxAttempts + 1) + ')'
+          });
         }
 
         google.script.run
           .withSuccessHandler(function(result) {
             if (result.success) {
-              // Transcript saved successfully
               transcriptFetchInProgress = false;
-              document.getElementById('transcriptFetchStatus').style.display = 'none';
-              document.getElementById('postCallControls').style.display = 'block';
               document.getElementById('defenseTitle').textContent = 'Defense Complete';
               document.getElementById('defenseSubtitle').textContent = 'Your responses have been recorded';
+              setButtonState('complete');
             } else if (result.retryable && attempt < maxAttempts) {
-              // Retry after 8 seconds
               setTimeout(function() {
                 attemptTranscriptFetch(attempt + 1);
               }, 8000);
             } else {
-              // Final failure — show message with continue option
               transcriptFetchInProgress = false;
-              document.getElementById('transcriptFetchStatus').style.display = 'none';
-              document.getElementById('postCallControls').style.display = 'block';
               document.getElementById('defenseTitle').textContent = 'Defense Complete';
               document.getElementById('defenseSubtitle').textContent =
                 'Your transcript will be recovered automatically. You may close this page.';
+              setButtonState('complete', {
+                hintText: 'Transcript will be recovered automatically'
+              });
             }
           })
           .withFailureHandler(function(error) {
@@ -1217,60 +1269,15 @@
               }, 8000);
             } else {
               transcriptFetchInProgress = false;
-              document.getElementById('transcriptFetchStatus').style.display = 'none';
-              document.getElementById('postCallControls').style.display = 'block';
               document.getElementById('defenseTitle').textContent = 'Defense Complete';
               document.getElementById('defenseSubtitle').textContent =
                 'Your transcript will be recovered automatically. You may close this page.';
+              setButtonState('complete', {
+                hintText: 'Transcript will be recovered automatically'
+              });
             }
           })
           .fetchAndStoreTranscript(currentSessionId);
-      }
-
-      // Handle call/conversation events from the widget
-      function handleCallEvent(event) {
-        console.log('Widget event:', event.type, event.detail);
-
-        const detail = event.detail || {};
-
-        // Detect call started
-        if (detail.status === 'connected' ||
-            event.type.includes('started') ||
-            event.type.includes('connected')) {
-          if (!callInProgress) {
-            callInProgress = true;
-            showCallInProgress();
-          }
-        }
-
-        // Update avatar speaking state
-        if (detail.isSpeaking !== undefined) {
-          const avatar = document.getElementById('agentAvatar');
-          if (detail.isSpeaking) {
-            avatar.classList.add('speaking');
-          } else {
-            avatar.classList.remove('speaking');
-          }
-        }
-
-        // Also check mode for speaking/listening
-        if (detail.mode === 'speaking') {
-          document.getElementById('agentAvatar').classList.add('speaking');
-        } else if (detail.mode === 'listening') {
-          document.getElementById('agentAvatar').classList.remove('speaking');
-        }
-
-        // Check for call ended status
-        if (detail.status === 'ended' ||
-            detail.status === 'disconnected' ||
-            event.type.includes('ended') ||
-            event.type.includes('disconnected')) {
-          if (callInProgress || defenseActive) {
-            callInProgress = false;
-            stopCallTimer();
-            showCallEnded();
-          }
-        }
       }
 
       function startCallTimer() {
@@ -1297,18 +1304,24 @@
         defenseActive = false;
         stopCallTimer();
 
+        // Defensive cleanup of any lingering conversation
+        if (conversation) {
+          try { conversation.endSession(); } catch (e) {}
+          conversation = null;
+        }
+
         document.getElementById('completeDisplayName').textContent = studentName;
-
-        // Clean up widget
-        const container = document.getElementById('widgetContainer');
-        container.innerHTML = '';
-        widgetElement = null;
-
         showScreen('screen-complete');
       }
 
       // Reset portal for new submission
       function resetPortal() {
+        // Clean up conversation if still active
+        if (conversation) {
+          try { conversation.endSession(); } catch (e) {}
+          conversation = null;
+        }
+
         currentSessionId = null;
         studentName = null;
         essayText = null;
@@ -1317,8 +1330,7 @@
         selectedQuestions = null;
         defenseActive = false;
         callStartTime = null;
-        widgetElement = null;
-        callInProgress = false;
+        defenseState = 'ready';
         transcriptFetchInProgress = false;
 
         // Reset form
@@ -1327,14 +1339,10 @@
         document.getElementById('charCount').className = 'char-count';
 
         // Reset defense screen state
-        document.getElementById('postCallControls').style.display = 'none';
-        document.getElementById('finishDefenseControls').style.display = 'block';
-        document.getElementById('transcriptFetchStatus').style.display = 'none';
         document.getElementById('defenseTitle').textContent = 'Begin Your Defense';
         document.getElementById('defenseSubtitle').textContent = 'Click the button below to start speaking with ChekhovBot';
         document.getElementById('callTimer').style.display = 'none';
-        document.getElementById('widgetContainer').style.display = 'flex';
-        document.getElementById('widgetContainer').innerHTML = '';
+        setButtonState('ready');
 
         showScreen('screen-welcome');
       }
@@ -1388,12 +1396,7 @@
 
       // Initialize
       document.addEventListener('DOMContentLoaded', function() {
-        // Load config from backend
         loadConfig();
-
-        // Listen for widget events at the document level
-        document.addEventListener('elevenlabs-convai:call', handleCallEvent);
-        document.addEventListener('elevenlabs-convai:conversation', handleCallEvent);
       });
     </script>
 
