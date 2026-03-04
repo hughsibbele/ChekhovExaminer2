@@ -1898,7 +1898,81 @@ function gradeAllPending() {
 }
 
 /**
- * Regrades all submissions that have already been graded or reviewed.
+ * Regrades selected submissions. Select rows in the spreadsheet first, then run from menu.
+ * Only regrades rows with status Graded or Reviewed. Shows confirmation before proceeding.
+ */
+function regradeSelected() {
+  const ui = SpreadsheetApp.getUi();
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SUBMISSIONS_SHEET);
+
+  if (!sheet || SpreadsheetApp.getActiveSheet().getName() !== SUBMISSIONS_SHEET) {
+    ui.alert("Please navigate to the Database sheet first.");
+    return;
+  }
+
+  const selection = sheet.getActiveRange();
+  if (!selection) {
+    ui.alert("Please select one or more rows first.");
+    return;
+  }
+
+  // Get the row numbers from the selection
+  const startRow = selection.getRow();
+  const numRows = selection.getNumRows();
+  const data = sheet.getDataRange().getValues();
+
+  const eligible = [];
+  const skipped = [];
+  for (let row = startRow; row < startRow + numRows; row++) {
+    if (row <= 1) continue; // Skip header
+    const rowData = data[row - 1];
+    if (!rowData) continue;
+    const status = rowData[COL.STATUS - 1];
+    const sessionId = rowData[COL.SESSION_ID - 1];
+    const name = rowData[COL.STUDENT_NAME - 1] || sessionId;
+    if (status === STATUS.GRADED || status === STATUS.REVIEWED) {
+      eligible.push({ sessionId: sessionId.toString(), name: name });
+    } else {
+      skipped.push(`${name} (${status})`);
+    }
+  }
+
+  if (eligible.length === 0) {
+    const msg = skipped.length > 0
+      ? "No eligible submissions in selection. Skipped: " + skipped.join(", ")
+      : "No submissions found in selected rows.";
+    ui.alert(msg);
+    return;
+  }
+
+  const names = eligible.map(e => e.name).join(", ");
+  let msg = `Regrade ${eligible.length} submission(s)?\n\n${names}`;
+  if (skipped.length > 0) {
+    msg += `\n\nSkipping ${skipped.length} (not Graded/Reviewed): ${skipped.join(", ")}`;
+  }
+
+  const confirm = ui.alert("Regrade Selected", msg, ui.ButtonSet.YES_NO);
+  if (confirm !== ui.Button.YES) {
+    return;
+  }
+
+  let success = 0;
+  let errors = 0;
+  for (const entry of eligible) {
+    const result = gradeDefense(entry.sessionId);
+    if (result && result.success) {
+      success++;
+    } else {
+      errors++;
+    }
+  }
+
+  ui.alert(`Regrade complete: ${success} succeeded, ${errors} failed.`);
+  sheetLog("regradeSelected", "Regrade complete", { success: success, errors: errors, total: eligible.length });
+}
+
+/**
+ * Regrades all submissions with status Graded or Reviewed.
  * Shows a confirmation dialog before proceeding since this overwrites existing grades.
  */
 function regradeAll() {
@@ -1907,7 +1981,6 @@ function regradeAll() {
   const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
   const data = sheet.getDataRange().getValues();
 
-  // Count eligible submissions
   const eligible = [];
   for (let i = 1; i < data.length; i++) {
     const status = data[i][COL.STATUS - 1];
@@ -1954,6 +2027,7 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Oral Defense')
     .addItem('Grade All Pending', 'gradeAllPending')
+    .addItem('Regrade Selected', 'regradeSelected')
     .addItem('Regrade All', 'regradeAll')
     .addItem('Recover Stuck Defenses', 'recoverStuckDefenses')
     .addItem('Refresh Status Counts', 'showStatusCounts')
