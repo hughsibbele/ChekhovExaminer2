@@ -46,10 +46,11 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 
 ## Grading System
 
-- **Rubric**: 4 elements — Paper Knowledge (1-3) and Writing Process (1-3) are capped at 3; Text Knowledge (1-5) and Content Understanding (1-5) can go higher. 3 = meets expectations
-- **Multiplier formula**: `1.00 + (average - 3) × 0.05`, clamped to [0.90, 1.05], rounded to 2 decimal places
-- **Integrity flags**: Any element scoring 1 or average ≤ 1.5 triggers a flag. Comments are prefixed with "⚠ INTEGRITY FLAG ⚠"
-- **Parser** (`parseGradingResponse`): extracts `Multiplier: X.XX` line from Gemini's structured output; falls back to computing from individual scores if that line is missing
+- **Rubric**: 2 pass/flag elements + 2 scored elements. Paper Knowledge and Writing Process are binary Pass/Flag (integrity checks). Text Knowledge (1-5) and Content Understanding (1-5) are scored and used for the multiplier. 3 = meets expectations (specificity and breadth about equal to the essay)
+- **Multiplier formula**: `1.00 + (average of TK and CU - 3) × 0.05`, clamped to [0.90, 1.05], rounded to 2 decimal places
+- **Integrity flags**: Either pass/flag element being Flag, either scored element at 1, or scored average ≤ 1.5 triggers a flag. Comments are prefixed with "⚠ INTEGRITY FLAG ⚠"
+- **Parser** (`parseGradingResponse`): extracts `Multiplier: X.XX` line from Gemini's structured output; falls back to computing from TK and CU scores if that line is missing. Also detects `Paper Knowledge: Flag` or `Writing Process: Flag` as integrity triggers
+- **Regrade**: `regradeAll()` (Oral Defense menu → "Regrade All") re-runs grading on all submissions with Graded or Reviewed status, with confirmation dialog. Overwrites existing grades and comments
 - Prompts: `grading_system_prompt` (role/persona) and `grading_rubric` (rubric + scoring formula + output format)
 
 ## TODO
