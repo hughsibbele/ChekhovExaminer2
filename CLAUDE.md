@@ -56,6 +56,10 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 
 - Move `index.html` to `docs/index.html` and serve GitHub Pages from `/docs` instead of root. Currently the entire repo (code.gs, CLAUDE.md, Prompts, etc.) is web-accessible. Serving from `/docs` limits Pages to just the frontend.
 
+## Possible Functionality to Add
+
+- **Open-book grading with source texts**: Include the actual Chekhov stories in the Gemini grading prompt so the LLM can verify student claims against the source material. Currently the grader evaluates student specificity impressionistically; with the texts included, it could check whether a cited scene/quote/character action actually exists. Implementation: add a "Texts" tab to the spreadsheet (columns: `story_title`, `story_text`), a `getStoryTexts()` function, and modify `gradeDefense()` to include relevant texts in the prompt. Gemini Flash's 1M token context window can easily handle 10+ stories. **Key constraint**: must use the same translation the students read (likely a single anthology). This is currently blocked by the manual effort of scanning/pasting the books. The rubric would shift from "does this sound specific" to "verify this against the provided text," with notes on inaccurate student claims in the rationale.
+
 ## Style Conventions
 
 - Use JSDoc comments on functions
