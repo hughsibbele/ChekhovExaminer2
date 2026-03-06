@@ -1910,21 +1910,26 @@ function regradeSelected() {
     return;
   }
 
-  const selection = sheet.getActiveRange();
-  if (!selection) {
+  const rangeList = sheet.getActiveRangeList();
+  if (!rangeList) {
     ui.alert("Please select one or more rows first.");
     return;
   }
 
-  // Get the row numbers from the selection
-  const startRow = selection.getRow();
-  const numRows = selection.getNumRows();
-  const data = sheet.getDataRange().getValues();
+  // Collect all selected row numbers from all selection ranges (handles Cmd+click)
+  const selectedRows = new Set();
+  for (const range of rangeList.getRanges()) {
+    const startRow = range.getRow();
+    const numRows = range.getNumRows();
+    for (let r = startRow; r < startRow + numRows; r++) {
+      if (r > 1) selectedRows.add(r); // Skip header
+    }
+  }
 
+  const data = sheet.getDataRange().getValues();
   const eligible = [];
   const skipped = [];
-  for (let row = startRow; row < startRow + numRows; row++) {
-    if (row <= 1) continue; // Skip header
+  for (const row of selectedRows) {
     const rowData = data[row - 1];
     if (!rowData) continue;
     const status = rowData[COL.STATUS - 1];
