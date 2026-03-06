@@ -1291,7 +1291,7 @@ function callGemini(prompt) {
  * Parses Gemini's grading response in the structured output format
  * Expected format has four scored elements (Paper Knowledge 1-3, Writing Process 1-3,
  * Text Knowledge 1-5, Content Understanding 1-5), an "Adjustment: +/-X.X" line,
- * and optional INTEGRITY FLAGS section
+ * and optional FLAGS FOR INSTRUCTOR section
  * @param {string} response - The raw response from Gemini
  * @returns {Object} Object with grade (number - percentage point adjustment), comments (string), and flagged (boolean)
  */
@@ -1327,13 +1327,13 @@ function parseGradingResponse(response) {
   // Clamp to valid range [-10, +5]
   grade = Math.max(-10, Math.min(5, grade));
 
-  // Check for integrity flags in the INTEGRITY FLAGS section
-  const flagSection = response.match(/INTEGRITY FLAGS:\s*([\s\S]*?)$/i);
+  // Check for flags in the FLAGS FOR INSTRUCTOR section
+  const flagSection = response.match(/FLAGS FOR INSTRUCTOR:\s*([\s\S]*?)$/i);
   const flagText = flagSection ? flagSection[1].trim() : "";
-  const hasIntegrityFlags = flagText.length > 0 && !/^none\.?$/i.test(flagText);
+  const hasFlags = flagText.length > 0 && !/^none\.?$/i.test(flagText);
 
   // Any score below 3 triggers a flag
-  const flagged = hasIntegrityFlags ||
+  const flagged = hasFlags ||
     (pk !== null && pk < 3) || (wp !== null && wp < 3) ||
     (tk !== null && tk < 3) || (cu !== null && cu < 3);
 
@@ -1402,7 +1402,7 @@ Assess this defense using the rubric and output format specified above.`;
     const parsed = parseGradingResponse(response);
 
     // 6. Update the sheet (prefix comments with FLAG if integrity concerns)
-    const commentPrefix = parsed.flagged ? "⚠ INTEGRITY FLAG ⚠\n\n" : "";
+    const commentPrefix = parsed.flagged ? "⚠ FLAG FOR INSTRUCTOR ⚠\n\n" : "";
     const updated = updateStudentStatus(sessionId, STATUS.GRADED, {
       grade: parsed.grade,
       comments: commentPrefix + parsed.comments
@@ -1413,7 +1413,7 @@ Assess this defense using the rubric and output format specified above.`;
     }
 
     if (parsed.flagged) {
-      sheetLog("gradeDefense", "INTEGRITY FLAG", {
+      sheetLog("gradeDefense", "FLAG FOR INSTRUCTOR", {
         sessionId: sessionId,
         grade: parsed.grade
       });

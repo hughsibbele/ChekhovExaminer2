@@ -48,8 +48,8 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 
 - **Rubric**: 4 scored elements. Paper Knowledge (1-3) and Writing Process (1-3) assess familiarity with the essay and process. Text Knowledge (1-5) and Content Understanding (1-5) assess textual knowledge and analytical depth. 3 = meets expectations across all elements
 - **Adjustment formula**: additive percentage points. Average all 4 scores, then `(average - 3) × 5`. Range: [-10, +5]. Stored in the AI_ADJUSTMENT column. PK/WP are capped at 3 so they can only pull the average down (structural downside asymmetry)
-- **Integrity flags**: Any element scoring below 3 triggers a flag. Comments are prefixed with "⚠ INTEGRITY FLAG ⚠"
-- **Parser** (`parseGradingResponse`): extracts `Adjustment: +/-X.X` line from Gemini's structured output; falls back to computing from all four scores if that line is missing. Flags if any of the four scored elements is below 3
+- **Flags for instructor**: Any element scoring below 3, or significant transcript quality issues, triggers a flag. Comments are prefixed with "⚠ FLAG FOR INSTRUCTOR ⚠"
+- **Parser** (`parseGradingResponse`): extracts `Adjustment: +/-X.X` line from Gemini's structured output; falls back to computing from all four scores if that line is missing. Flags if any scored element is below 3 or FLAGS FOR INSTRUCTOR section has content
 - **Regrade**: `regradeAll()` (Oral Defense menu → "Regrade All") re-runs grading on all submissions with Graded or Reviewed status, with confirmation dialog. Overwrites existing grades and comments
 - Prompts: `grading_system_prompt` (role/persona) and `grading_rubric` (rubric + scoring formula + output format)
 
