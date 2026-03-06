@@ -2043,6 +2043,83 @@ function regradeAll() {
 }
 
 /**
+ * Backfills call_length and defense_started for rows that have a conversation_id
+ * but are missing these fields. Uses the ElevenLabs API to fetch metadata.
+ * Run from the Oral Defense menu after fixing the metadata field paths.
+ */
+function backfillCallMetadata() {
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
+  const data = sheet.getDataRange().getValues();
+
+  // Find rows with a conversation_id but missing call_length or defense_started
+  const eligible = [];
+  for (let i = 1; i < data.length; i++) {
+    const conversationId = data[i][COL.CONVERSATION_ID - 1]?.toString().trim();
+    const callLength = data[i][COL.CALL_LENGTH - 1];
+    const defenseStarted = data[i][COL.DEFENSE_STARTED - 1];
+
+    if (conversationId && (!callLength || !defenseStarted)) {
+      eligible.push({
+        row: i + 1,
+        conversationId: conversationId,
+        studentName: data[i][COL.STUDENT_NAME - 1],
+        missingCallLength: !callLength,
+        missingDefenseStarted: !defenseStarted
+      });
+    }
+  }
+
+  if (eligible.length === 0) {
+    ui.alert("Backfill", "No rows need backfilling — all rows with conversation IDs already have call length and defense started.", ui.ButtonSet.OK);
+    return;
+  }
+
+  const confirm = ui.alert(
+    "Backfill Call Metadata",
+    `Found ${eligible.length} row(s) missing call length or defense started. Backfill from ElevenLabs API?`,
+    ui.ButtonSet.YES_NO
+  );
+  if (confirm !== ui.Button.YES) return;
+
+  let updated = 0;
+  let errors = 0;
+
+  for (const entry of eligible) {
+    try {
+      const convData = getElevenLabsConversation(entry.conversationId);
+      const callLength = convData.metadata?.call_duration_secs || null;
+      const startUnix = convData.metadata?.start_time_unix_secs;
+      const defenseStartTime = startUnix ? new Date(startUnix * 1000) : null;
+
+      if (entry.missingCallLength && callLength !== null) {
+        sheet.getRange(entry.row, COL.CALL_LENGTH).setValue(callLength);
+      }
+      if (entry.missingDefenseStarted && defenseStartTime) {
+        sheet.getRange(entry.row, COL.DEFENSE_STARTED).setValue(defenseStartTime);
+      }
+
+      updated++;
+      sheetLog("backfillCallMetadata", "Backfilled", {
+        studentName: entry.studentName,
+        callLength: callLength,
+        defenseStartTime: defenseStartTime
+      });
+    } catch (e) {
+      errors++;
+      sheetLog("backfillCallMetadata", "Error", {
+        studentName: entry.studentName,
+        conversationId: entry.conversationId,
+        error: e.toString()
+      });
+    }
+  }
+
+  ui.alert(`Backfill complete: ${updated} updated, ${errors} errors.`);
+}
+
+/**
  * Creates a custom menu in the spreadsheet and applies formatting
  */
 function onOpen() {
@@ -2052,6 +2129,7 @@ function onOpen() {
     .addItem('Regrade Selected', 'regradeSelected')
     .addItem('Regrade All', 'regradeAll')
     .addItem('Recover Stuck Defenses', 'recoverStuckDefenses')
+    .addItem('Backfill Call Metadata', 'backfillCallMetadata')
     .addItem('Refresh Status Counts', 'showStatusCounts')
     .addSeparator()
     .addItem('Format Database Sheet', 'formatDatabaseSheet')
