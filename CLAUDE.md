@@ -46,10 +46,10 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 
 ## Grading System
 
-- **Rubric**: 2 pass/flag elements + 2 scored elements. Paper Knowledge and Writing Process are binary Pass/Flag (integrity checks). Text Knowledge (1-5) and Content Understanding (1-5) are scored and used for the multiplier. 3 = meets expectations (specificity and breadth about equal to the essay)
-- **Multiplier formula**: `1.00 + (average of TK and CU - 3) × 0.05`, clamped to [0.90, 1.05], rounded to 2 decimal places
-- **Integrity flags**: Either pass/flag element being Flag, either scored element at 1, or scored average ≤ 1.5 triggers a flag. Comments are prefixed with "⚠ INTEGRITY FLAG ⚠"
-- **Parser** (`parseGradingResponse`): extracts `Multiplier: X.XX` line from Gemini's structured output; falls back to computing from TK and CU scores if that line is missing. Also detects `Paper Knowledge: Flag` or `Writing Process: Flag` as integrity triggers
+- **Rubric**: 4 scored elements. Paper Knowledge (1-3) and Writing Process (1-3) assess familiarity with the essay and process. Text Knowledge (1-5) and Content Understanding (1-5) assess textual knowledge and analytical depth. 3 = meets expectations across all elements
+- **Adjustment formula**: additive percentage points. Average all 4 scores, then `(average - 3) × 5`. Range: [-10, +5]. Stored in the AI_ADJUSTMENT column. PK/WP are capped at 3 so they can only pull the average down (structural downside asymmetry)
+- **Integrity flags**: Any element scoring below 3 triggers a flag. Comments are prefixed with "⚠ INTEGRITY FLAG ⚠"
+- **Parser** (`parseGradingResponse`): extracts `Adjustment: +/-X.X` line from Gemini's structured output; falls back to computing from all four scores if that line is missing. Flags if any of the four scored elements is below 3
 - **Regrade**: `regradeAll()` (Oral Defense menu → "Regrade All") re-runs grading on all submissions with Graded or Reviewed status, with confirmation dialog. Overwrites existing grades and comments
 - Prompts: `grading_system_prompt` (role/persona) and `grading_rubric` (rubric + scoring formula + output format)
 
