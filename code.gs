@@ -874,7 +874,7 @@ function updateStudentStatus(sessionId, newStatus, additionalFields = {}) {
         sheet.getRange(row, COL.DEFENSE_STARTED).setValue(additionalFields.defenseStarted);
       }
       if (additionalFields.callLength !== undefined) {
-        sheet.getRange(row, COL.CALL_LENGTH).setValue(additionalFields.callLength);
+        sheet.getRange(row, COL.CALL_LENGTH).setValue(formatCallLength(additionalFields.callLength));
       }
       if (additionalFields.transcript) {
         sheet.getRange(row, COL.TRANSCRIPT).setValue(additionalFields.transcript);
@@ -1072,6 +1072,18 @@ function handleTranscriptWebhook(payload) {
  * @param {Array} transcriptArray - Array of {role, message} objects
  * @returns {string} Formatted transcript text
  */
+/**
+ * Formats call duration in seconds to "Xm Ys" string
+ * @param {number|null} secs - Duration in seconds
+ * @returns {string|null} Formatted string like "10m 37s", or null if input is null
+ */
+function formatCallLength(secs) {
+  if (secs === null || secs === undefined) return null;
+  const mins = Math.floor(secs / 60);
+  const remainSecs = Math.round(secs % 60);
+  return `${mins}m ${remainSecs}s`;
+}
+
 function formatTranscript(transcriptArray) {
   if (!Array.isArray(transcriptArray)) {
     return String(transcriptArray);
@@ -2094,7 +2106,7 @@ function backfillCallMetadata() {
       const defenseStartTime = startUnix ? new Date(startUnix * 1000) : null;
 
       if (entry.missingCallLength && callLength !== null) {
-        sheet.getRange(entry.row, COL.CALL_LENGTH).setValue(callLength);
+        sheet.getRange(entry.row, COL.CALL_LENGTH).setValue(formatCallLength(callLength));
       }
       if (entry.missingDefenseStarted && defenseStartTime) {
         sheet.getRange(entry.row, COL.DEFENSE_STARTED).setValue(defenseStartTime);
