@@ -32,6 +32,10 @@ jobs:
             --exclude='.github' \
             source/ template/
 
+      - name: Replace production URL with placeholder in template
+        run: |
+          sed -i 's|https://script.google.com/macros/s/[^"]*|https://script.google.com/macros/s/DEPLOYMENT_ID/exec|' template/index.html
+
       - name: Check for changes
         id: changes
         working-directory: template
